@@ -28,6 +28,12 @@ pytest:
   script:
   - pytest
 
+publish_test:
+  stage: publish
+  script:
+    - pip install --upgrade twine
+    - twine upload -u __token__ -p $TESTPYPI_TOKEN --repository testpypi dist/*
+
 #publish_snapshot:
 #  stage: publish
 #  script:
