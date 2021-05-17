@@ -1,0 +1,45 @@
+image: python:latest
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+  - python --version
+  - pip install -r requirements.txt
+
+stages:
+  - build
+  - test
+  - publish
+
+wheels:
+  stage: build
+  script: python setup.py bdist_wheel
+  artifacts:
+    paths:
+    - dist/
+
+pytest:
+  stage: test
+  script:
+  - pytest
+
+#publish_snapshot:
+#  stage: publish
+#  script:
+#    - twine upload -u $REGISTRY_NEXUS_USER -p $REGISTRY_NEXUS_PASSWORD --repository-url ${NEXUS_URL}/pypi-snapshots/ dist/*
+#  only:
+#    - master
+#  except:
+#    - tags
+#        
+#publish_release:
+#  stage: publish
+#  script:
+#    - twine upload -u $REGISTRY_NEXUS_USER -p $REGISTRY_NEXUS_PASSWORD --repository-url ${NEXUS_URL}/pypi-releases/ dist/*
+#  only:
+#    - tags

@@ -1,6 +1,6 @@
 # inept
 
-An **in**teractiv**e** o**pt**ion library for handling complex option hierarchies
+An "**in**teractiv**e** o**pt**ion" library for handling complex option hierarchies
 from multiple sources (script, CLI, config files, ...).
 
 ## Installation 
