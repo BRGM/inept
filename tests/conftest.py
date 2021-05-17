@@ -1,9 +1,7 @@
 import sys
 import os
 
-PKG_RELATIVE_PATH = '.'
-
-collect_ignore = ["setup.py", "docs/source/conf.py"]
+PKG_RELATIVE_PATH = '..'
 
 
 def add_package_to_path():

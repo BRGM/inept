@@ -1,8 +1,10 @@
 import sys
 import click
 
+from .tree import Node, Group, Exclusive, Option
 
-class ConfigBase:
+
+class Config:
 
     def __init__(self, root, data=None):
         assert self.validate_root(root)
