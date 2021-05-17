@@ -6,9 +6,13 @@ variables:
 cache:
   paths:
     - .cache/pip
+    - venv/
 
 before_script:
   - python --version
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
   - pip install -r requirements.txt
 
 stages:
@@ -28,24 +32,16 @@ pytest:
   script:
   - pytest
 
-publish_test:
+publish:
   stage: publish
   script:
     - pip install --upgrade twine
-    - twine upload -u __token__ -p $TESTPYPI_TOKEN --repository testpypi dist/*
+    - twine upload -u __token__ -p $PYPI_TOKEN dist/*
+  only:
+    - master
 
-#publish_snapshot:
+#publish_test:
 #  stage: publish
 #  script:
-#    - twine upload -u $REGISTRY_NEXUS_USER -p $REGISTRY_NEXUS_PASSWORD --repository-url ${NEXUS_URL}/pypi-snapshots/ dist/*
-#  only:
-#    - master
-#  except:
-#    - tags
-#        
-#publish_release:
-#  stage: publish
-#  script:
-#    - twine upload -u $REGISTRY_NEXUS_USER -p $REGISTRY_NEXUS_PASSWORD --repository-url ${NEXUS_URL}/pypi-releases/ dist/*
-#  only:
-#    - tags
+#    - pip install --upgrade twine
+#    - twine upload -u __token__ -p $TESTPYPI_TOKEN --repository testpypi dist/*
