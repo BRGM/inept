@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+import pathlib
 import codecs
 import os.path
 
@@ -18,18 +19,16 @@ def get_version(rel_path):
     raise RuntimeError("Unable to find version string.")
 
 
-with open('LICENSE') as f:
-    license = f.read()
-
-
 setup(
     name='inept',
     version=get_version('inept/__init__.py'),
     description='INteractivE oPTion system',
     author='Farid Smai',
     author_email='f.smai@brgm.fr',
-    url='https://gitlab.inria.fr/charms/inept',
-    license=license,
+    url='https://gitlab.com/fsmai/inept',
+    license='GNU GPLv3',
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     packages=find_packages(exclude=('tests', 'docs')),
     install_requires=[
         'click',
