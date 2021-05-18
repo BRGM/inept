@@ -22,7 +22,7 @@ def get_version(rel_path):
 setup(
     name='inept',
     version=get_version('inept/__init__.py'),
-    description='INteractivE oPTion system',
+    description='INteractive Editable oPTions',
     author='Farid Smai',
     author_email='f.smai@brgm.fr',
     url='https://gitlab.com/fsmai/inept',
