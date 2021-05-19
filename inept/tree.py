@@ -7,6 +7,7 @@ class Node:
     name = None
     nodes = ()
     default = NoDefault
+    doc = None
 
     def __init__(self, name, is_flag=False):
         self.name = None if name is None else str(name)
