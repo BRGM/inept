@@ -22,6 +22,8 @@ stages:
 
 wheels:
   stage: build
+  tags:
+    - build
   script: python setup.py bdist_wheel
   artifacts:
     paths:
@@ -29,19 +31,25 @@ wheels:
 
 pytest:
   stage: test
+  tags:
+    - test
   script:
-  - pytest
+    - pytest
 
 publish:
   stage: publish
+  tags:
+    - release
   script:
     - pip install --upgrade twine
-    - twine upload -u __token__ -p $PYPI_TOKEN dist/*
+    - twine upload -u __token__ -p $PYPI_TOKEN --skip-existing dist/*
   only:
     - master
 
 #publish_test:
 #  stage: publish
+#  tags:
+#    - test
 #  script:
 #    - pip install --upgrade twine
 #    - twine upload -u __token__ -p $TESTPYPI_TOKEN --repository testpypi dist/*
