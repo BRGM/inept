@@ -7,7 +7,7 @@ from .tree import Node, Group, Exclusive, Option
 class Config:
 
     def __init__(self, root, data=None):
-        assert self.validate_root(root)
+        self.validate_root(root)
         self._root = root
         self.make_cli()
         self._data = {}
@@ -23,9 +23,8 @@ class Config:
         return self._cli
 
     def validate_root(self, root):
-        # TODO: check tree sanity
-        #   - no nodes with duplicate children names
-        return isinstance(root, Node)
+        assert isinstance(root, Node)
+        root.validate()
 
     def update(self, data):
         for key, value in dict(data).items():

@@ -6,8 +6,8 @@ def test_make_tree():
         Option("a1ob", bool, default=False),
         Exclusive("a2e", [
             Exclusive('b1ef', is_flag=True, nodes=[
-                Option("c1of", is_flag=True),
-                Option("c2of", is_flag=True),
+                Option("c1of", bool),
+                Option("c2of", bool),
                 Group("c3gf", is_flag=True, nodes=[
                     Option("d1o"),
                     Option("d2o"),
@@ -18,7 +18,7 @@ def test_make_tree():
                     Group("d3gf", is_flag=True, nodes=[
                         Option("e1oi", int, default=50),
                     ]),
-                    Option("d4of", is_flag=True),
+                    Option("d4of", bool),
                 ]),
                 Option("c4od", float, default=1e-8),
                 Option("c5oi", int, default=100),
