@@ -45,11 +45,4 @@ publish:
     - twine upload -u __token__ -p $PYPI_TOKEN --skip-existing dist/*
   only:
     - master
-
-#publish_test:
-#  stage: publish
-#  tags:
-#    - test
-#  script:
-#    - pip install --upgrade twine
-#    - twine upload -u __token__ -p $TESTPYPI_TOKEN --repository testpypi dist/*
+    - tags
