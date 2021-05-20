@@ -12,6 +12,7 @@ def test_default_under_flag_group():
     conf = Config(root)
 
     assert conf.to_dict() == {}
+    assert conf.to_nested_dict() == {}
 
     conf['a'] = True
 
@@ -20,10 +21,17 @@ def test_default_under_flag_group():
         'a.x': 42,
         'a.y': False,
     }
+    assert conf.to_nested_dict() == {
+        'a': {
+            'x': 42,
+            'y': False,
+        },
+    }
 
     conf['a'] = False
 
     assert conf.to_dict() == {}
+    assert conf.to_nested_dict() == {}
 
     conf['a.x'] = 2
 
@@ -31,5 +39,11 @@ def test_default_under_flag_group():
         'a': True,
         'a.x': 2,
         'a.y': False,
+    }
+    assert conf.to_nested_dict() == {
+        'a': {
+            'x': 2,
+            'y': False,
+        },
     }
 

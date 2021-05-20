@@ -143,11 +143,27 @@ class ConfigSerialize(ConfigBase):
             try:
                 value = self[key]
             except KeyError:
-                pass
-            else:
-                res[key] = value
+                continue
+            res[key] = value
+        return res
+
+    def to_nested_dict(self):
+        res = {}
+        for path in self.root.walk():
+            key = Node.name_from_path(path)
+            try:
+                value = self[key]
+            except KeyError:
+                continue
+            data = res
+            for node in path[:-1]:
+                if node.name:
+                    data = data.setdefault(node.name, {})
+            if isinstance(path[-1], Option):
+                data[path[-1].name] = value
         return res
 
 
 class Config(ConfigSerialize, ConfigCLI, ConfigBase):
     pass
+
