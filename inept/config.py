@@ -4,23 +4,16 @@ import click
 from .tree import Node, Group, Exclusive, Option
 
 
-class Config:
+class ConfigBase:
 
-    def __init__(self, root, data=None):
+    def __init__(self, root):
         self.validate_root(root)
         self._root = root
-        self.make_cli()
         self._data = {}
-        if data:
-            self.update(data)
 
     @property
     def root(self):
         return self._root
-
-    @property
-    def cli(self):
-        return self._cli
 
     def validate_root(self, root):
         assert isinstance(root, Node)
@@ -76,9 +69,14 @@ class Config:
     def __getitem__(self, key):
         data = self._data
         for parent, child in self._walk_path(key):
+            missing = parent not in data
             data = data.get(parent, {})
             if isinstance(parent, Exclusive) and not {child}.issuperset(data.keys()):
                 raise KeyError(key)
+            if isinstance(parent, Group) and parent.is_flag:
+                valid = parent.has_default and parent.default
+                if missing and not valid:
+                    raise KeyError(key)
         if child in data:
             if isinstance(child, Option):
                 return data[child]
@@ -96,6 +94,17 @@ class Config:
 
     def __delitem__(self, key):
         raise NotImplementedError("TODO")
+
+
+class ConfigCLI(ConfigBase):
+
+    def __init__(self, tree):
+        super().__init__(tree)
+        self.make_cli()
+
+    @property
+    def cli(self):
+        return self._cli
 
     def make_cli(self, name='cli'):
         command_name = name
@@ -125,3 +134,20 @@ class Config:
         self.update(self.parse_cli(args, **extra))
 
 
+class ConfigSerialize(ConfigBase):
+
+    def to_dict(self):
+        res = {}
+        for path in self.root.walk():
+            key = Node.name_from_path(path)
+            try:
+                value = self[key]
+            except KeyError:
+                pass
+            else:
+                res[key] = value
+        return res
+
+
+class Config(ConfigSerialize, ConfigCLI, ConfigBase):
+    pass
