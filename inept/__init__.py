@@ -1,6 +1,5 @@
-
+from importlib_metadata import version, PackageNotFoundError
 try:
-    from importlib_metadata import version, PackageNotFoundError
     __version__ = version("inept")
 except (PackageNotFoundError, ModuleNotFoundError):
     # package is not installed
