@@ -44,5 +44,4 @@ publish:
     - pip install --upgrade twine
     - twine upload -u __token__ -p $PYPI_TOKEN dist/*
   only:
-    - master
     - tags
