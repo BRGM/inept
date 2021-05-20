@@ -1,3 +1,4 @@
 wheel
+importlib_metadata
 pytest
 click
