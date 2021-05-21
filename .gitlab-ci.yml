@@ -45,3 +45,13 @@ publish:
     - twine upload -u __token__ -p $PYPI_TOKEN dist/*
   only:
     - tags
+
+publish:
+  stage: publish
+  tags:
+    - release
+  script:
+    - pip install --upgrade twine
+    - twine upload --repository-url https://gitlab.inria.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi -u gitlab-ci-token -p $CI_JOB_TOKEN dist/*
+  only:
+    - master
