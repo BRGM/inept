@@ -6,14 +6,20 @@ from .tree import Node, Group, Exclusive, Option
 
 class ConfigBase:
 
-    def __init__(self, root):
-        self.validate_root(root)
-        self._root = root
-        self._data = {}
+    root = Group(None, ())
 
-    @property
-    def root(self):
-        return self._root
+    def __init__(self):
+        self._data = {}
+        self.validate_root(self.root)
+
+    # def __init__(self, root):
+    #     self._data = {}
+    #     self._root = root
+    #     self.validate_root(self.root)
+
+    # @property
+    # def root(self):
+        # return self._root
 
     def validate_root(self, root):
         assert isinstance(root, Node)
@@ -98,8 +104,12 @@ class ConfigBase:
 
 class ConfigCLI(ConfigBase):
 
-    def __init__(self, tree):
-        super().__init__(tree)
+    # def __init__(self, tree):
+    #     super().__init__(tree)
+    #     self.make_cli()
+
+    def __init__(self):
+        super().__init__()
         self.make_cli()
 
     @property
@@ -165,5 +175,12 @@ class ConfigSerialize(ConfigBase):
 
 
 class Config(ConfigSerialize, ConfigCLI, ConfigBase):
-    pass
+
+    def __init__(self, root):
+        self._root = root
+        super().__init__()
+
+    @property
+    def root(self):
+        return self._root
 
