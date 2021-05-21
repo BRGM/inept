@@ -12,15 +12,6 @@ class ConfigBase:
         self._data = {}
         self.validate_root(self.root)
 
-    # def __init__(self, root):
-    #     self._data = {}
-    #     self._root = root
-    #     self.validate_root(self.root)
-
-    # @property
-    # def root(self):
-        # return self._root
-
     def validate_root(self, root):
         assert isinstance(root, Node)
         root.validate()
@@ -104,29 +95,24 @@ class ConfigBase:
 
 class ConfigCLI(ConfigBase):
 
-    # def __init__(self, tree):
-    #     super().__init__(tree)
-    #     self.make_cli()
-
-    def __init__(self):
-        super().__init__()
-        self.make_cli()
+    def __init__(self, command_name=None, **kwds):
+        super().__init__(**kwds)
+        self.make_cli(command_name)
 
     @property
     def cli(self):
         return self._cli
 
-    def make_cli(self, name='cli'):
-        command_name = name
+    def make_cli(self, command_name):
         params = []
         for p in self.root.walk():
             name = Node.name_from_path(p)
             node = p[-1]
-            type = getattr(node, "type", None)
             opt = click.Option(
                 [f"--{name}"],
                 expose_value=False,
-                type=type,
+                type=self.get_type(node),
+                help=node.doc,
                 # is_flag=node.is_flag,
             )
             opt.name = name
@@ -134,10 +120,19 @@ class ConfigCLI(ConfigBase):
             params.append(opt)
         self._cli = click.Command(command_name, params=params)
 
+    @staticmethod
+    def get_type(node):
+        if isinstance(node, Group) and node.is_flag:
+            return bool
+        type = getattr(node, "type", None)
+        type = getattr(type, '__click_type__', type)
+        return type
+
     def parse_cli(self, args=None, **extra):
         if args is None:
             args = sys.argv[1:]
-        ctx = self.cli.make_context(self.cli, args, **extra)
+        ctx = self.cli.make_context(self.cli.name, args, **extra)
+        # ctx = self.cli.make_context(None, args, **extra)
         return {k: v for k, v in ctx.params.items() if v is not None}
 
     def load_cli(self, args=None, **extra):
@@ -176,9 +171,9 @@ class ConfigSerialize(ConfigBase):
 
 class Config(ConfigSerialize, ConfigCLI, ConfigBase):
 
-    def __init__(self, root):
+    def __init__(self, root, **kwds):
         self._root = root
-        super().__init__()
+        super().__init__(**kwds)
 
     @property
     def root(self):

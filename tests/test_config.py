@@ -5,9 +5,9 @@ from inept import Config, Group, Exclusive, Option
 from test_tree import test_make_tree
 
 
-def test_make_empty_conf():
+def test_make_empty_conf(**kwds):
     root = test_make_tree()
-    conf = Config(root)
+    conf = Config(root, **kwds)
     return conf
 
 

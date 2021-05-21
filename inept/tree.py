@@ -1,3 +1,4 @@
+from .types import Identity
 
 
 NoDefault = object()
@@ -38,10 +39,10 @@ class Node:
 
 
 class Option(Node):
-    def __init__(self, name, type=None, default=NoDefault, doc=None):
+    def __init__(self, name, type=Identity, default=NoDefault, doc=None):
         assert name
         super().__init__(name, default, doc)
-        self.type = type or (lambda x: x)
+        self.type = type
 
 
 class Group(Node):

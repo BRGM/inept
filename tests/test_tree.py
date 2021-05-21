@@ -3,13 +3,13 @@ from inept import Group, Exclusive, Option
 
 def test_make_tree():
     root = Group(None, [
-        Option("a1ob", bool, default=False),
+        Option("a1ob", bool, default=False, doc="a1ob doc"),
         Exclusive("a2e", [
-            Exclusive('b1ef', is_flag=True, nodes=[
+            Exclusive('b1ef', is_flag=True, doc="b1ef doc", nodes=[
                 Option("c1of", bool),
                 Option("c2of", bool),
                 Group("c3gf", is_flag=True, nodes=[
-                    Option("d1o"),
+                    Option("d1o", doc="d1o doc"),
                     Option("d2o"),
                 ]),
             ]),
