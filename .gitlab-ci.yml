@@ -36,7 +36,7 @@ pytest:
   script:
     - pytest
 
-publish:
+publish-release:
   stage: publish
   tags:
     - release
@@ -46,7 +46,7 @@ publish:
   only:
     - tags
 
-publish:
+publish-dev:
   stage: publish
   tags:
     - release
