@@ -1,4 +1,4 @@
-from inept import Config, Group, Exclusive, Option
+from inept import ConfigSimple, Group, Exclusive, Option
 
 
 def test_default_under_flag_group():
@@ -9,7 +9,7 @@ def test_default_under_flag_group():
         ]),
     ])
 
-    conf = Config(root)
+    conf = ConfigSimple(root)
 
     assert conf.to_dict() == {}
     assert conf.to_nested_dict() == {}

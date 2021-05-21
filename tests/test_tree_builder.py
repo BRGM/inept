@@ -1,10 +1,10 @@
 from inept.tree import Node
-from inept.magic import Magic
+from inept.tree_builder import TreeBuilder
 
 
 def test_build():
 
-    class MyConfig(Magic):
+    class MyConfig(TreeBuilder):
         "MyConfig documentation, not for options"
         with group:
             _ = """

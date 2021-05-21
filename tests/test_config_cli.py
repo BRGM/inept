@@ -1,6 +1,6 @@
 import pytest
 import click
-from test_config import test_conf_script, test_make_empty_conf
+from test_config_simple import test_conf_script, test_make_empty_conf
 
 
 def test_conf_cli():

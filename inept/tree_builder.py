@@ -14,7 +14,7 @@ class AnnotationsDict(dict):
         self.namespace.add_type(key, value)
 
 
-class MagicNamespace(dict):
+class TreeBuilderNamespace(dict):
 
     __doc_key__ = '_'
 
@@ -77,7 +77,7 @@ class MagicNamespace(dict):
             assert isinstance(node, tree.Option)
             node.type = value
         else:
-            self.record(key, None)
+            self.record(key, tree.NoDefault)
             self._last_record.type = value
 
     def parent(self, obj):
@@ -117,11 +117,11 @@ class MagicNamespace(dict):
         assert cm is self._stack.pop()
 
 
-class MagicMeta(type):
+class TreeBuilderMeta(type):
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwds):
-        return MagicNamespace()
+        return TreeBuilderNamespace()
 
     def __new__(mcls, name, bases, namespace):
         root = namespace.root
@@ -164,6 +164,6 @@ class IsFlagMarker:
         return "is_flag"
 
 
-class Magic(metaclass=MagicMeta):
+class TreeBuilder(metaclass=TreeBuilderMeta):
     pass
 

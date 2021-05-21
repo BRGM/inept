@@ -169,7 +169,7 @@ class ConfigSerialize(ConfigBase):
         return res
 
 
-class Config(ConfigSerialize, ConfigCLI, ConfigBase):
+class ConfigSimple(ConfigSerialize, ConfigCLI, ConfigBase):
 
     def __init__(self, root, **kwds):
         self._root = root
