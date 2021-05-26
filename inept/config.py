@@ -66,14 +66,21 @@ class ConfigBase:
     def __getitem__(self, key):
         data = self._data
         for parent, child in self._walk_path(key):
-            missing = parent not in data
+            is_missing = parent not in data
             data = data.get(parent, {})
-            if isinstance(parent, Exclusive) and not {child}.issuperset(data.keys()):
-                raise KeyError(key)
-            if isinstance(parent, Group) and parent.is_flag:
-                valid = parent.has_default and parent.default
-                if missing and not valid:
+
+            if isinstance(parent, Exclusive):
+                if not {child}.issuperset(data.keys()):
                     raise KeyError(key)
+                if data:
+                    continue
+                if isinstance(child, Group) and not (child.has_default and child.default):
+                    raise KeyError(key)
+            elif isinstance(parent, Group) and parent.is_flag:
+                is_valid = parent.has_default and parent.default
+                if is_missing and not is_valid:
+                    raise KeyError(key)
+
         if child in data:
             if isinstance(child, Option):
                 return data[child]

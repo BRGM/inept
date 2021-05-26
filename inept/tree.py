@@ -76,6 +76,12 @@ class Exclusive(Group):
 
     def validate(self):
         super().validate()
+        not_options = [e for e in self.nodes if not e.is_option()]
+        if not_options:
+            raise ValueError(
+                "All nodes must be option or flag group: "
+                f"{list(not_options)}"
+            )
         defaults = {n: n.default for n in self.nodes if n.has_default}
         if len(defaults) > 1:
             raise ValueError(
