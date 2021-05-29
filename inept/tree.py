@@ -1,3 +1,4 @@
+import collections
 from .types import Identity
 
 
@@ -15,19 +16,12 @@ class Node:
     def __repr__(self):
         return f"<{self.__class__.__qualname__} {self.name!r}>"
 
-    def is_option(self):
-        return self.name is not None
-
     @property
     def has_default(self):
         return self.default is not NoDefault
 
     def walk(self):
-        if self.is_option():
-            yield (self,)
-        for node in self.nodes:
-            for path in node.walk():
-                yield (self,) + path
+        yield (self,)
 
     @staticmethod
     def name_from_path(path):
@@ -38,7 +32,8 @@ class Node:
         pass
 
 
-class Option(Node):
+class Value(Node):
+
     def __init__(self, name, type=Identity, default=NoDefault, doc=None):
         assert name
         super().__init__(name, default, doc)
@@ -46,13 +41,19 @@ class Option(Node):
 
 
 class Group(Node):
-    def __init__(self, name, nodes, is_flag=False, default=NoDefault, doc=None):
+
+    def __init__(self, name, nodes, default=NoDefault, doc=None):
         super().__init__(name, default, doc, nodes)
         assert all(isinstance(e, Node) for e in nodes)
-        self.is_flag = bool(is_flag)
 
-    def is_option(self):
-        return super().is_option() and self.is_flag
+    def walk(self):
+        yield (self,)
+        for node in self.nodes:
+            for path in node.walk():
+                head, *tail = path
+                if not tail and not isinstance(head, Value):
+                    continue
+                yield (self,) + path
 
     def validate(self):
         for child in self.nodes:
@@ -72,17 +73,23 @@ class Group(Node):
             child.validate()
 
 
-class Exclusive(Group):
+class Options(Group):
+
+    def walk(self):
+        yield (self,)
+        for node in self.nodes:
+            for path in node.walk():
+                yield (self,) + path
+
+
+class Switch(Options):
 
     def validate(self):
         super().validate()
-        not_options = [e for e in self.nodes if not e.is_option()]
-        if not_options:
-            raise ValueError(
-                "All nodes must be option or flag group: "
-                f"{list(not_options)}"
-            )
-        defaults = {n: n.default for n in self.nodes if n.has_default}
+        defaults = [
+            n for n in self.nodes
+            if n.has_default and not (isinstance(n, Group) and not n.default)
+        ]
         if len(defaults) > 1:
             raise ValueError(
                 "Can't have multiple nodes with default: "

@@ -1,7 +1,7 @@
 import sys
 import click
 
-from .tree import Node, Group, Exclusive, Option
+from .tree import Node, Group, Switch, Options, Value
 
 
 class ConfigBase:
@@ -9,6 +9,9 @@ class ConfigBase:
     root = Group(None, ())
 
     def __init__(self):
+        # TODO: _data should be flat, not nested !
+        #       and defaults should be applied at init
+        #       then not asked again after.
         self._data = {}
         self.validate_root(self.root)
 
@@ -40,11 +43,11 @@ class ConfigBase:
         data = self._data
         for parent, child in self._walk_path(key):
             data = data.setdefault(parent, {})
-            if isinstance(parent, Exclusive) and not {child}.issuperset(data.keys()):
+            if isinstance(parent, Switch) and not {child}.issuperset(data.keys()):
                 olds = ' and '.join(repr(e.name) for e in data.keys())
                 self.info(f"{olds} is owerwritten by '{child.name}'")
                 data.clear()
-        if isinstance(child, Option):
+        if isinstance(child, Value):
             type = child.type
             try:
                 value = type(value)
@@ -65,24 +68,27 @@ class ConfigBase:
 
     def __getitem__(self, key):
         data = self._data
+        child = None
         for parent, child in self._walk_path(key):
-            is_missing = parent not in data
             data = data.get(parent, {})
-
-            if isinstance(parent, Exclusive):
+            if isinstance(parent, Switch):
                 if not {child}.issuperset(data.keys()):
                     raise KeyError(key)
                 if data:
                     continue
                 if isinstance(child, Group) and not (child.has_default and child.default):
                     raise KeyError(key)
-            elif isinstance(parent, Group) and parent.is_flag:
-                is_valid = parent.has_default and parent.default
-                if is_missing and not is_valid:
-                    raise KeyError(key)
-
+            elif isinstance(parent, Options):
+                if child in data:
+                    continue
+                if child.has_default:
+                    if isinstance(child, Value) or child.default:
+                        continue
+                raise KeyError(key)
+        if child is None:
+            raise KeyError(key)
         if child in data:
-            if isinstance(child, Option):
+            if isinstance(child, Value):
                 return data[child]
             else:
                 return True
@@ -120,7 +126,6 @@ class ConfigCLI(ConfigBase):
                 expose_value=False,
                 type=self.get_type(node),
                 help=node.doc,
-                # is_flag=node.is_flag,
             )
             opt.name = name
             opt.expose_value = True
@@ -129,7 +134,8 @@ class ConfigCLI(ConfigBase):
 
     @staticmethod
     def get_type(node):
-        if isinstance(node, Group) and node.is_flag:
+        # if isinstance(node, Group) and node.is_flag:
+        if isinstance(node, Group):
             return bool
         type = getattr(node, "type", None)
         type = getattr(type, '__click_type__', type)
@@ -171,7 +177,7 @@ class ConfigSerialize(ConfigBase):
             for node in path[:-1]:
                 if node.name:
                     data = data.setdefault(node.name, {})
-            if isinstance(path[-1], Option):
+            if isinstance(path[-1], Value):
                 data[path[-1].name] = value
         return res
 

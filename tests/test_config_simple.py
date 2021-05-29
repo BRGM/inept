@@ -1,6 +1,6 @@
 import pytest
 
-from inept import ConfigSimple, Group, Exclusive, Option
+from inept import ConfigSimple, Group, Switch, Value, Options
 
 from test_tree import test_make_tree
 
@@ -37,9 +37,9 @@ def test_conf_script():
 
 
 def test_default_under_exclusif():
-    root = Exclusive(None, [
-        Option('x', int, 42),
-        Option('y', bool)
+    root = Switch(None, [
+        Value('x', int, 42),
+        Value('y', bool)
     ])
 
     conf = ConfigSimple(root)
@@ -56,9 +56,9 @@ def test_default_under_exclusif():
 
 
 def test_multiple_default_under_exclusif():
-    root = Exclusive(None, [
-        Option('x', int, 42),
-        Option('y', bool, True)
+    root = Switch(None, [
+        Value('x', int, 42),
+        Value('y', bool, True)
     ])
 
     with pytest.raises(ValueError):
@@ -66,14 +66,14 @@ def test_multiple_default_under_exclusif():
 
 
 def test_default_group_under_exclusif():
-    root = Exclusive(None, [
-        Group('a', is_flag=True, default=True, nodes=[
-            Option('x', int, 42),
-            Option('y', bool, True)
+    root = Switch(None, [
+        Group('a', default=True, nodes=[
+            Value('x', int, 42),
+            Value('y', bool, True)
         ]),
-        Group('b', is_flag=True, nodes=[
-            Option('x', int, 42),
-            Option('y', bool, True)
+        Group('b', nodes=[
+            Value('x', int, 42),
+            Value('y', bool, True)
         ]),
     ])
 
@@ -106,11 +106,11 @@ def test_default_group_under_exclusif():
     assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': True}
 
 
-def test_default_under_flag_group():
-    root = Group(None, [
-        Group('a', is_flag=True, nodes=[
-            Option('x', int, 42),
-            Option('y', bool, False)
+def test_one_option():
+    root = Options(None, [
+        Group('a', nodes=[
+            Value('x', int, 42),
+            Value('y', bool, False)
         ]),
     ])
 
@@ -142,40 +142,96 @@ def test_default_under_flag_group():
     assert conf.to_dict() == {}
 
 
-def test_not_all_flag_under_exclusive_exclusive():
-    root = Exclusive(None, [
-        Group('a', is_flag=True, nodes=[
-            Option('x', int, 42),
+def test_options():
+    root = Options(None, [
+        Group('a', [
+            Value('x', int, 42),
+            Value('y', str, 'hello'),
         ]),
-        Group('b', nodes=[
-            Option('x', int, 12),
-        ]),
-    ])
-    with pytest.raises(ValueError):
-        ConfigSimple(root)
-
-
-def test_not_any_flag_under_exclusive_exclusive():
-    root = Exclusive(None, [
-        Group('a', nodes=[
-            Option('x', int, 42),
-        ]),
-        Group('b', nodes=[
-            Option('x', int, 12),
+        Group('b', [
+            Value('x', int, 6),
+            Value('y', str, 'bye'),
         ]),
     ])
-    with pytest.raises(ValueError):
-        ConfigSimple(root)
+
+    conf = ConfigSimple(root)
+    assert conf.to_dict() == {}
+
+    conf['a'] = True
+    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+
+    conf['a'] = False
+    assert conf.to_dict() == {}
+
+    conf['b.x'] = 12
+    assert conf.to_dict() == {'b': True, 'b.x': 12, 'b.y': 'bye'}
+
+    conf['a'] = True
+    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello', 'b': True, 'b.x': 12, 'b.y': 'bye'}
+
+
+def test_options_with_default():
+    root = Options(None, [
+        Group('a', [
+            Value('x', int, 42),
+            Value('y', str, 'hello'),
+        ], True),
+        Group('b', [
+            Value('x', int, 6),
+            Value('y', str, 'bye'),
+        ]),
+    ])
+
+    conf = ConfigSimple(root)
+    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+
+    conf['a'] = True
+    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+
+    conf['a'] = False
+    assert conf.to_dict() == {}
+
+    conf['b.x'] = 12
+    assert conf.to_dict() == {'b': True, 'b.x': 12, 'b.y': 'bye'}
+
+    conf['a'] = True
+    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello', 'b': True, 'b.x': 12, 'b.y': 'bye'}
+
+
+# def test_not_all_flag_under_exclusive_exclusive():
+#     root = Switch(None, [
+#         Group('a', nodes=[
+#             Value('x', int, 42),
+#         ]),
+#         Group('b', nodes=[
+#             Value('x', int, 12),
+#         ]),
+#     ])
+#     with pytest.raises(ValueError):
+#         ConfigSimple(root)
+
+
+# def test_not_any_flag_under_exclusive_exclusive():
+#     root = Switch(None, [
+#         Group('a', nodes=[
+#             Value('x', int, 42),
+#         ]),
+#         Group('b', nodes=[
+#             Value('x', int, 12),
+#         ]),
+#     ])
+#     with pytest.raises(ValueError):
+#         ConfigSimple(root)
 
 
 def test_empty_conf_exclusive():
     conf = ConfigSimple(
-        Exclusive(None, [
-            Group('a', is_flag=True, nodes=[
-                Option('x', int, 42),
+        Switch(None, [
+            Group('a', nodes=[
+                Value('x', int, 42),
             ]),
-            Group('b', is_flag=True, nodes=[
-                Option('x', int, 12),
+            Group('b', nodes=[
+                Value('x', int, 12),
             ]),
         ])
     )
@@ -184,12 +240,12 @@ def test_empty_conf_exclusive():
 
 def test_empty_conf_default_under_exclusive():
     conf = ConfigSimple(
-        Exclusive(None, [
-            Group('a', is_flag=True, default=True, nodes=[
-                Option('x', int, 42),
+        Switch(None, [
+            Group('a', default=True, nodes=[
+                Value('x', int, 42),
             ]),
-            Group('b', is_flag=True, nodes=[
-                Option('x', int, 12),
+            Group('b', nodes=[
+                Value('x', int, 12),
             ]),
         ])
     )

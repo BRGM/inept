@@ -6,11 +6,11 @@ except (PackageNotFoundError, ModuleNotFoundError):
     pass
 
 
-from .tree import Group, Exclusive, Option
-from .tree_builder import TreeBuilder
+from .tree import Value, Group, Options, Switch
+# from .tree_builder import TreeBuilder
 from .config import ConfigSimple, ConfigSerialize, ConfigCLI, ConfigBase
 
 
-class Config(TreeBuilder, ConfigSerialize, ConfigCLI, ConfigBase):
-    pass
+# class Config(TreeBuilder, ConfigSerialize, ConfigCLI, ConfigBase):
+#     pass
 
