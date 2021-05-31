@@ -96,14 +96,7 @@ def test_default_group_under_exclusif():
     assert conf.to_dict() == {'b': True, 'b.x': 42, 'b.y': True}
 
     conf['b'] = False
-
-    # WARNING : old default come back !
-    assert conf['a'] == True
-    assert conf['a.x'] == 42
-    assert conf['a.y'] == True
-    with pytest.raises(KeyError):
-        conf['b']
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': True}
+    assert conf.to_dict() == {}
 
 
 def test_one_option():

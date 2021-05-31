@@ -9,11 +9,28 @@ class ConfigBase:
     root = Group(None, ())
 
     def __init__(self):
-        # TODO: _data should be flat, not nested !
-        #       and defaults should be applied at init
-        #       then not asked again after.
-        self._data = {}
         self.validate_root(self.root)
+        self._data = self._init_data()
+
+    def _init_data(self):
+        data = {}
+        if isinstance(self.root, Group):
+            data[self.root] = True
+        elif isinstance(self.root, Value) and self.root.has_default:
+            data[self.root] = self.root.convert(self.root.default)
+        for parent, child in self.root.iter_edges():
+            if child.has_default:
+                value = child.default
+            elif isinstance(child, Value):
+                continue
+            elif isinstance(parent, Options):
+                value = False
+            elif isinstance(parent, Group):
+                value = True
+            else:
+                continue
+            data[child] = child.convert(value)
+        return data
 
     def validate_root(self, root):
         assert isinstance(root, Node)
@@ -39,62 +56,32 @@ class ConfigBase:
         path = self.path_from_name(key)
         yield from zip(path[:-1], path[1:])
 
-    def __setitem__(self, key, value):
-        data = self._data
-        for parent, child in self._walk_path(key):
-            data = data.setdefault(parent, {})
-            if isinstance(parent, Switch) and not {child}.issuperset(data.keys()):
-                olds = ' and '.join(repr(e.name) for e in data.keys())
-                self.info(f"{olds} is owerwritten by '{child.name}'")
-                data.clear()
-        if isinstance(child, Value):
-            type = child.type
-            try:
-                value = type(value)
-            except Exception as err:
-                raise ValueError(
-                    f"Wrong value ({value!r}) for {key!r}, "
-                    f"should be of type {type.__qualname__}."
-                )
-            else:
-                data[child] = value
-        elif isinstance(child, Group):
-            if value:
-                data.setdefault(child, {})
-            else:
-                data.pop(child)
-        else:
-            raise RuntimeError(f"Not able to handle key {key!r}")
-
     def __getitem__(self, key):
-        data = self._data
-        child = None
-        for parent, child in self._walk_path(key):
-            data = data.get(parent, {})
-            if isinstance(parent, Switch):
-                if not {child}.issuperset(data.keys()):
-                    raise KeyError(key)
-                if data:
-                    continue
-                if isinstance(child, Group) and not (child.has_default and child.default):
-                    raise KeyError(key)
-            elif isinstance(parent, Options):
-                if child in data:
-                    continue
-                if child.has_default:
-                    if isinstance(child, Value) or child.default:
-                        continue
-                raise KeyError(key)
-        if child is None:
+        if not key:
             raise KeyError(key)
-        if child in data:
-            if isinstance(child, Value):
-                return data[child]
-            else:
+        *path, target = self.path_from_name(key)
+        if all(map(self._data.get, path)) and target in self._data:
+            if isinstance(target, Value):
+                return self._data[target]
+            elif self._data[target]:
                 return True
-        elif child.has_default:
-            return child.default
         raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        if not key:
+            raise KeyError(key)
+        path = self.path_from_name(key)
+        target = path[-1]
+        for parent, child in zip(path[:-1], path[1:]):
+            self._data[parent] = True
+            if isinstance(parent, Switch):
+                actives = {n for n in parent.nodes if self._data.get(n)}
+                if actives - {child}:
+                    olds = ' and '.join(repr(e.name) for e in actives)
+                    self.info(f"{olds} is owerwritten by '{child.name}'")
+                    for node in actives:
+                        self._data.pop(node)
+        self._data[target] = target.convert(value)
 
     def get(self, key, default=None):
         try:
@@ -134,9 +121,6 @@ class ConfigCLI(ConfigBase):
 
     @staticmethod
     def get_type(node):
-        # if isinstance(node, Group) and node.is_flag:
-        if isinstance(node, Group):
-            return bool
         type = getattr(node, "type", None)
         type = getattr(type, '__click_type__', type)
         return type

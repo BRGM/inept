@@ -7,11 +7,12 @@ NoDefault = object()
 
 class Node:
 
-    def __init__(self, name, default=NoDefault, doc=None, nodes=()):
+    def __init__(self, name, type=bool, default=NoDefault, doc=None, nodes=()):
         self.name = None if name is None else str(name)
         self.doc = None if doc is None else str(doc)
         self.default = default
         self.nodes = list(nodes)
+        self.type = type
 
     def __repr__(self):
         return f"<{self.__class__.__qualname__} {self.name!r}>"
@@ -19,6 +20,22 @@ class Node:
     @property
     def has_default(self):
         return self.default is not NoDefault
+
+    def convert(self, value):
+        type = self.type
+        try:
+            value = type(value)
+        except Exception as err:
+            raise ValueError(
+                f"Wrong value ({value!r}) for {self!r}, "
+                f"should be of type {type.__qualname__}."
+            )
+        return value
+
+    def iter_edges(self):
+        for child in self.nodes:
+            yield (self, child)
+            yield from child.iter_edges()
 
     def walk(self):
         yield (self,)
@@ -36,14 +53,13 @@ class Value(Node):
 
     def __init__(self, name, type=Identity, default=NoDefault, doc=None):
         assert name
-        super().__init__(name, default, doc)
-        self.type = type
+        super().__init__(name, type=type, default=default, doc=doc)
 
 
 class Group(Node):
 
     def __init__(self, name, nodes, default=NoDefault, doc=None):
-        super().__init__(name, default, doc, nodes)
+        super().__init__(name, default=default, doc=doc, nodes=nodes)
         assert all(isinstance(e, Node) for e in nodes)
 
     def walk(self):
