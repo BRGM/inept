@@ -22,13 +22,11 @@ class TreeBuilderNamespace(dict):
         self.annotations = AnnotationsDict(self)
         self.group = GroupContextManager
         self.switch = SwitchContextManager
-        self.is_flag = IsFlagMarker()
         self.extra_new = dict(
             group=self.group(self),
             switch=self.switch(self),
         )
         self.extra = dict(
-            is_flag=self.is_flag,
             __annotations__=self.annotations,
         )
         self._stack = []
@@ -91,8 +89,6 @@ class TreeBuilderNamespace(dict):
     def record(self, name, obj):
         if isinstance(obj, GroupContextManagerBase):
             kwds = {}
-            if self.is_flag in obj.args:
-                kwds['is_flag'] = True
             if isinstance(obj, GroupContextManager):
                 node = tree.Group(name, [], **kwds)
             elif isinstance(obj, SwitchContextManager):
@@ -157,11 +153,6 @@ class GroupContextManager(GroupContextManagerBase):
 
 class SwitchContextManager(GroupContextManagerBase):
     pass
-
-
-class IsFlagMarker:
-    def __repr__(self):
-        return "is_flag"
 
 
 class TreeBuilder(metaclass=TreeBuilderMeta):
