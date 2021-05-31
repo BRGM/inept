@@ -107,6 +107,8 @@ class ConfigCLI(ConfigBase):
         params = []
         for p in self.root.walk():
             name = Node.name_from_path(p)
+            if not name:
+                continue
             node = p[-1]
             opt = click.Option(
                 [f"--{name}"],

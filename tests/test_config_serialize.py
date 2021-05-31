@@ -1,11 +1,11 @@
-from inept import ConfigSimple, Group, Exclusive, Option
+from inept import ConfigSimple, Group, Switch, Options, Value
 
 
 def test_default_under_flag_group():
-    root = Group(None, [
-        Group('a', is_flag=True, nodes=[
-            Option('x', int, 42),
-            Option('y', bool, False)
+    root = Options(None, [
+        Group('a', nodes=[
+            Value('x', int, 42),
+            Value('y', bool, False)
         ]),
     ])
 

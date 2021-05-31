@@ -7,7 +7,7 @@ def test_build():
         " Le menu le moins cher "
         with group:
             plat: str = "steak frite"
-            with exclusive:
+            with switch:
                 entree: str
                 dessert: str
             cafe: bool = False

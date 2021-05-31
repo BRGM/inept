@@ -21,11 +21,11 @@ class TreeBuilderNamespace(dict):
     def __init__(self):
         self.annotations = AnnotationsDict(self)
         self.group = GroupContextManager
-        self.exclusive = ExclusiveContextManager
+        self.switch = SwitchContextManager
         self.is_flag = IsFlagMarker()
         self.extra_new = dict(
             group=self.group(self),
-            exclusive=self.exclusive(self),
+            switch=self.switch(self),
         )
         self.extra = dict(
             is_flag=self.is_flag,
@@ -74,7 +74,7 @@ class TreeBuilderNamespace(dict):
     def add_type(self, key, value):
         node = self._last_record
         if node.name == key:
-            assert isinstance(node, tree.Option)
+            assert isinstance(node, tree.Value)
             node.type = value
         else:
             self.record(key, tree.NoDefault)
@@ -95,13 +95,13 @@ class TreeBuilderNamespace(dict):
                 kwds['is_flag'] = True
             if isinstance(obj, GroupContextManager):
                 node = tree.Group(name, [], **kwds)
-            elif isinstance(obj, ExclusiveContextManager):
-                node = tree.Exclusive(name, [], **kwds)
+            elif isinstance(obj, SwitchContextManager):
+                node = tree.Switch(name, [], **kwds)
             self._groups[obj] = node
             if self.root is None:
                 self.root = node
         else:
-            node = tree.Option(name, None, obj)
+            node = tree.Value(name, None, obj)
         parent = self.parent(obj)
         if parent:
             self._groups[parent].nodes.append(node)
@@ -155,7 +155,7 @@ class GroupContextManager(GroupContextManagerBase):
     pass
 
 
-class ExclusiveContextManager(GroupContextManagerBase):
+class SwitchContextManager(GroupContextManagerBase):
     pass
 
 
