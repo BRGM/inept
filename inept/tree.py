@@ -45,6 +45,10 @@ class Node:
         assert all(isinstance(e, Node) for e in path)
         return '.'.join(e.name for e in path if e.name)
 
+    def path_from_name(self, name):
+        mapping = {Node.name_from_path(p): p for p in self.walk()}
+        return mapping[name]
+
     def validate(self):
         pass
 

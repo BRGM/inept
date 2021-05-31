@@ -40,26 +40,18 @@ class ConfigBase:
         for key, value in dict(data).items():
             self[key] = value
 
-    @property
-    def valid_keys(self):
-        return [Node.name_from_path(p) for p in self.root.walk()]
+    def __iter__(self):
+        names = (Node.name_from_path(p) for p in self.root.walk())
+        return (n for n in names if n)
 
     def info(self, msg):
         # FIXME On fait quoi pour les messages ? du logging ?
         print("INFO:", msg)
 
-    def path_from_name(self, name):
-        mapping = {Node.name_from_path(p): p for p in self.root.walk()}
-        return mapping[name]
-
-    def _walk_path(self, key):
-        path = self.path_from_name(key)
-        yield from zip(path[:-1], path[1:])
-
     def __getitem__(self, key):
         if not key:
             raise KeyError(key)
-        *path, target = self.path_from_name(key)
+        *path, target = self.root.path_from_name(key)
         if all(map(self._data.get, path)) and target in self._data:
             if isinstance(target, Value):
                 return self._data[target]
@@ -70,7 +62,7 @@ class ConfigBase:
     def __setitem__(self, key, value):
         if not key:
             raise KeyError(key)
-        path = self.path_from_name(key)
+        path = self.root.path_from_name(key)
         target = path[-1]
         for parent, child in zip(path[:-1], path[1:]):
             self._data[parent] = True

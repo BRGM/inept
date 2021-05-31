@@ -7,9 +7,6 @@ class GroupContextManagerBase:
         self.namespace = namespace
         self.kwds = kwds
 
-    def new(self):
-        return type(self)(self.namespace, **self.kwds)
-
     def __enter__(self):
         self.namespace.enter(self)
         return self
@@ -26,15 +23,15 @@ class GroupContextManagerBase:
         return type(self)(self.namespace, default=False)
 
 class GroupContextManager(GroupContextManagerBase):
-    pass
+    node_type = tree.Group
 
 
 class OptionsContextManager(GroupContextManagerBase):
-    pass
+    node_type = tree.Options
 
 
 class SwitchContextManager(GroupContextManagerBase):
-    pass
+    node_type = tree.Switch
 
 
 class ContextManagerNamespace:
@@ -130,13 +127,7 @@ class TreeBuilderNamespace(dict):
 
     def record(self, name, obj):
         if isinstance(obj, GroupContextManagerBase):
-            kwds = obj.kwds
-            if isinstance(obj, GroupContextManager):
-                node = tree.Group(name, [], **kwds)
-            elif isinstance(obj, OptionsContextManager):
-                node = tree.Options(name, [], **kwds)
-            elif isinstance(obj, SwitchContextManager):
-                node = tree.Switch(name, [], **kwds)
+            node = obj.node_type(name, [], **obj.kwds)
             self._groups[obj] = node
             if self.root is None:
                 self.root = node
