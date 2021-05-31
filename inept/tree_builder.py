@@ -1,6 +1,57 @@
-from typing import NamedTuple
-
 from . import tree
+
+
+class GroupContextManagerBase:
+
+    def __init__(self, namespace, **kwds):
+        self.namespace = namespace
+        self.kwds = kwds
+
+    def new(self):
+        return type(self)(self.namespace, **self.kwds)
+
+    def __enter__(self):
+        self.namespace.enter(self)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.namespace.exit(self)
+
+    @property
+    def on(self):
+        return type(self)(self.namespace, default=True)
+
+    @property
+    def off(self):
+        return type(self)(self.namespace, default=False)
+
+class GroupContextManager(GroupContextManagerBase):
+    pass
+
+
+class OptionsContextManager(GroupContextManagerBase):
+    pass
+
+
+class SwitchContextManager(GroupContextManagerBase):
+    pass
+
+
+class ContextManagerNamespace:
+    def __init__(self, namespace):
+        self.__namespace__ = namespace
+
+    @property
+    def group(self):
+        return GroupContextManager(self.__namespace__)
+
+    @property
+    def options(self):
+        return OptionsContextManager(self.__namespace__)
+
+    @property
+    def switch(self):
+        return SwitchContextManager(self.__namespace__)
 
 
 class AnnotationsDict(dict):
@@ -16,19 +67,12 @@ class AnnotationsDict(dict):
 
 class TreeBuilderNamespace(dict):
 
-    __doc_key__ = '_'
-
-    def __init__(self):
-        self.annotations = AnnotationsDict(self)
-        self.group = GroupContextManager
-        self.switch = SwitchContextManager
-        self.extra_new = dict(
-            group=self.group(self),
-            switch=self.switch(self),
-        )
-        self.extra = dict(
-            __annotations__=self.annotations,
-        )
+    def __init__(self, magic_name):
+        self._magic_name = str(magic_name)
+        self.extra = {
+            '__annotations__': AnnotationsDict(self),
+            self._magic_name: ContextManagerNamespace(self),
+        }
         self._stack = []
         self._entering = False
         self._groups = {}
@@ -49,14 +93,12 @@ class TreeBuilderNamespace(dict):
             pass
         if key in self.extra:
             return self.extra[key]
-        if key in self.extra_new:
-            return self.extra_new[key].new()
         raise KeyError(key)
 
     def __setitem__(self, key, value):
         if self.level == 0:
             return super().__setitem__(key, value)
-        if key == self.__doc_key__:
+        if key == self._magic_name:
             return self.add_doc(value)
         entering, self._entering = self._entering, False
         if entering and value is self.cm:
@@ -80,7 +122,7 @@ class TreeBuilderNamespace(dict):
 
     def parent(self, obj):
         if isinstance(obj, GroupContextManagerBase):
-            if len(self._stack) >= 2:
+            if self.level >= 2:
                 return self._stack[-2]
             else:
                 return None
@@ -88,9 +130,11 @@ class TreeBuilderNamespace(dict):
 
     def record(self, name, obj):
         if isinstance(obj, GroupContextManagerBase):
-            kwds = {}
+            kwds = obj.kwds
             if isinstance(obj, GroupContextManager):
                 node = tree.Group(name, [], **kwds)
+            elif isinstance(obj, OptionsContextManager):
+                node = tree.Options(name, [], **kwds)
             elif isinstance(obj, SwitchContextManager):
                 node = tree.Switch(name, [], **kwds)
             self._groups[obj] = node
@@ -115,44 +159,17 @@ class TreeBuilderNamespace(dict):
 
 class TreeBuilderMeta(type):
 
+    __namespace_key__ = '_'
+
     @classmethod
     def __prepare__(mcls, name, bases, **kwds):
-        return TreeBuilderNamespace()
+        return TreeBuilderNamespace(mcls.__namespace_key__)
 
     def __new__(mcls, name, bases, namespace):
         root = namespace.root
         namespace = dict(namespace)
         namespace['root'] = root
         return type.__new__(mcls, name, bases, namespace)
-
-
-class GroupContextManagerBase:
-
-    def __init__(self, namespace, *args, **kwds):
-        self.namespace = namespace
-        self.args = args
-        self.kwds = kwds
-
-    def new(self):
-        return type(self)(self.namespace, *self.args, **self.kwds)
-
-    def __enter__(self):
-        self.namespace.enter(self)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.namespace.exit(self)
-
-    def __call__(self, *args, **kwds):
-        return type(self)(self.namespace, *args, **kwds)
-
-
-class GroupContextManager(GroupContextManagerBase):
-    pass
-
-
-class SwitchContextManager(GroupContextManagerBase):
-    pass
 
 
 class TreeBuilder(metaclass=TreeBuilderMeta):

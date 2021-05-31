@@ -6,29 +6,29 @@ def test_build():
 
     class MyConfig(TreeBuilder):
         "MyConfig documentation, not for options"
-        with group:
+        with _.group:
             _ = """
             general doc of option tree
             """
             a1ob: int = False
             _ = "a1ob doc"
-            with switch as a2e:
+            with _.switch as a2e:
                 _ = "doc for a2e switch group"
-                with switch as b1ef:
+                with _.switch as b1ef:
                     c1of: bool
                     c2of: bool
-                    with group as c3gf:
+                    with _.group as c3gf:
                         d1o: str
                         d2o: str
-                with group as b2gf:
-                    with switch:
-                        with group as d3gf:
+                with _.group as b2gf:
+                    with _.switch:
+                        with _.group as d3gf:
                             e1oi: int = 50
                         d4of: bool
                     c4od: float = 1e-8
                     c5oi: int = 100
                     c6o: str
-            with group as a3g:
+            with _.group as a3g:
                 b3oi: int = 30
                 b4od: float = 1e-6
 

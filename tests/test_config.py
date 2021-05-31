@@ -5,9 +5,9 @@ def test_build():
 
     class MenuPasCher(Config):
         " Le menu le moins cher "
-        with group:
+        with _.group:
             plat: str = "steak frite"
-            with switch:
+            with _.switch:
                 entree: str
                 dessert: str
             cafe: bool = False
