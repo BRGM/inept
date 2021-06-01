@@ -1,4 +1,5 @@
 import sys
+import collections
 import click
 
 from .tree import Node, Group, Switch, Options, Value
@@ -10,7 +11,8 @@ class ConfigBase:
 
     def __init__(self):
         self.validate_root(self.root)
-        self._data = self._init_data()
+        # _data is (local) + (intial default)
+        self._data = collections.ChainMap({}, self._init_data())
 
     def _init_data(self):
         data = {}
@@ -72,7 +74,8 @@ class ConfigBase:
                     olds = ' and '.join(repr(e.name) for e in actives)
                     self.info(f"{olds} is owerwritten by '{child.name}'")
                     for node in actives:
-                        self._data.pop(node)
+                        for dct in self._data.maps:
+                            dct.pop(node, None)
         self._data[target] = target.convert(value)
 
     def get(self, key, default=None):
@@ -83,6 +86,13 @@ class ConfigBase:
 
     def __delitem__(self, key):
         raise NotImplementedError("TODO")
+
+    def __or__(self, other):
+        assert self.root == other.root
+        res = type(self)()
+        res._data.maps[0].update(self._data.maps[0])
+        res._data.maps[0].update(other._data.maps[0])
+        return res
 
 
 class ConfigCLI(ConfigBase):
