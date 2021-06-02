@@ -184,7 +184,10 @@ class ConfigCLI(ConfigMapping):
         return {k: v for k, v in ctx.params.items() if v is not None}
 
     def load_cli(self, args=None, **extra):
-        self.update(self.parse_cli(args, **extra))
+        try:
+            self.update(self.parse_cli(args, **extra))
+        except click.exceptions.Exit as err:
+            sys.exit(err.exit_code)
 
 
 class ConfigSerialize(ConfigMapping):
