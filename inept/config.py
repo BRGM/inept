@@ -11,6 +11,7 @@ class ConfigMapping:
 
     def __init__(self):
         self.validate_root(self.root)
+        self._base_path = ()
         self._node_ids = {}
         # _data is (local) + (intial default)
         self._data = collections.ChainMap({}, self._init_default())
@@ -67,10 +68,13 @@ class ConfigMapping:
         # FIXME On fait quoi pour les messages ? du logging ?
         print("INFO:", msg)
 
+    def _get_path(self, key):
+        return self._base_path + self.root.path_from_name(key)
+
     def __getitem__(self, key):
         if not key:
             raise KeyError(key)
-        *path, target = self.root.path_from_name(key)
+        *path, target = self._get_path(key)
         path = map(self._id, path)
         id_target = self._id(target)
         if all(map(self._data.get, path)) and id_target in self._data:
@@ -84,7 +88,7 @@ class ConfigMapping:
         if not key:
             raise KeyError(key)
         _id = self._id
-        path = self.root.path_from_name(key)
+        path = self._get_path(key)
         target = path[-1]
         for parent, child in zip(path[:-1], path[1:]):
             self._register(parent)
@@ -120,12 +124,19 @@ class ConfigMapping:
 
 class ConfigExtract(ConfigMapping):
 
+    def _get_base_path(self, node):
+        for *base, leaf in self.root.walk(filter=False):
+            if leaf == node:
+                return tuple(base)
+        raise ValueError("node {node} is not in self.root")
+
     def extract_node(self, node):
-        # TODO: check if node is in self.root
+        base_path = self._get_base_path(node)
         root = node.rename(None)
         self._register(root, self._id(node))
         res = type(self)()
         res.root = root
+        res._base_path = base_path
         res._node_ids = self._node_ids
         res._data = self._data
         return res
