@@ -52,6 +52,12 @@ class Node:
     def validate(self):
         pass
 
+    def rename(self, name):
+        res = object.__new__(type(self))
+        res.__dict__.update(self.__dict__)
+        res.name = None if name is None else str(name)
+        return res
+
 
 class Value(Node):
 

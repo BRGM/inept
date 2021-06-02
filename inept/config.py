@@ -12,9 +12,9 @@ class ConfigBase:
     def __init__(self):
         self.validate_root(self.root)
         # _data is (local) + (intial default)
-        self._data = collections.ChainMap({}, self._init_data())
+        self._data = collections.ChainMap({}, self._init_default())
 
-    def _init_data(self):
+    def _init_default(self):
         data = {}
         if isinstance(self.root, Group):
             data[self.root] = True

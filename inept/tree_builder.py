@@ -73,6 +73,7 @@ class TreeBuilderNamespace(dict):
         self._stack = []
         self._entering = False
         self._groups = {}
+        self._injected_nodes = set()
         self.root = None
 
     @property
@@ -110,6 +111,11 @@ class TreeBuilderNamespace(dict):
 
     def add_type(self, key, value):
         node = self._last_record
+        if node in self._injected_nodes:
+            raise SyntaxError(
+                "do not use annotation when assigning an existing tree"
+                f" ('{key}: {value} = ...')"
+            )
         if node.name == key:
             assert isinstance(node, tree.Value)
             node.type = value
@@ -131,6 +137,9 @@ class TreeBuilderNamespace(dict):
             self._groups[obj] = node
             if self.root is None:
                 self.root = node
+        elif isinstance(obj, tree.Node):
+            node = obj.rename(name)
+            self._injected_nodes.add(node)
         else:
             node = tree.Value(name, None, obj)
         parent = self.parent(obj)
@@ -158,6 +167,8 @@ class TreeBuilderMeta(type):
 
     def __new__(mcls, name, bases, namespace):
         root = namespace.root
+        if root is not None:
+            root.validate()
         namespace = dict(namespace)
         namespace['root'] = root
         return type.__new__(mcls, name, bases, namespace)
