@@ -9,6 +9,7 @@ except (PackageNotFoundError, ModuleNotFoundError):
 from .tree import Value, Group, Options, Switch
 from .tree_builder import TreeBuilder
 from .config import ConfigSimple, ConfigBase
+from .utils import flatten
 
 
 class Config(TreeBuilder, ConfigBase):
