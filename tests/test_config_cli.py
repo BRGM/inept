@@ -40,7 +40,7 @@ def test_conf_cli_alone():
 def test_help(capsys):
     conf = test_make_empty_conf(command_name='cli')
 
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(SystemExit):
         conf.load_cli(["--help"])
     captured = capsys.readouterr()
 
