@@ -8,4 +8,6 @@ dist/*
 
 env/
 
+_version.py
+
 *.swp

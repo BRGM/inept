@@ -1,10 +1,8 @@
-from importlib_metadata import version, PackageNotFoundError
-try:
-    __version__ = version("inept")
-except (PackageNotFoundError, ModuleNotFoundError):
-    # package is not installed
-    pass
 
+try:
+    from ._version import version as __version__
+except ModuleNotFoundError:
+    pass
 
 from .tree import Value, Group, Options, Switch
 from .tree_builder import TreeBuilder

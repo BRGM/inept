@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='inept',
-    use_scm_version=True,
+    use_scm_version={'write_to': 'inept/_version.py'},
     setup_requires=['setuptools_scm', 'wheel'],
     description='INteractive Editable oPTions',
     author='Farid Smai',
@@ -14,7 +14,6 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=('tests', 'docs')),
     install_requires=[
-        "importlib_metadata",
         'click',
     ],
 )
