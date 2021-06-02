@@ -11,15 +11,31 @@ class ConfigMapping:
 
     def __init__(self):
         self.validate_root(self.root)
+        self._node_ids = {}
         # _data is (local) + (intial default)
         self._data = collections.ChainMap({}, self._init_default())
 
+    def _register(self, node, id=None):
+        if node in self._node_ids:
+            if id is None:
+                return
+            raise ValueError(f"node {node} is already registered")
+        assert isinstance(node, Node)
+        if id is None:
+            id = hash(node)
+        self._node_ids[node] = id
+
+    def _id(self, node):
+        return self._node_ids.get(node, None)
+
     def _init_default(self):
+        _id = self._id
         data = {}
+        self._register(self.root)
         if isinstance(self.root, Group):
-            data[self.root] = True
+            data[_id(self.root)] = True
         elif isinstance(self.root, Value) and self.root.has_default:
-            data[self.root] = self.root.convert(self.root.default)
+            data[_id(self.root)] = self.root.convert(self.root.default)
         for parent, child in self.root.iter_edges():
             if child.has_default:
                 value = child.default
@@ -31,7 +47,8 @@ class ConfigMapping:
                 value = True
             else:
                 continue
-            data[child] = child.convert(value)
+            self._register(child)
+            data[_id(child)] = child.convert(value)
         return data
 
     def validate_root(self, root):
@@ -54,29 +71,34 @@ class ConfigMapping:
         if not key:
             raise KeyError(key)
         *path, target = self.root.path_from_name(key)
-        if all(map(self._data.get, path)) and target in self._data:
+        path = map(self._id, path)
+        id_target = self._id(target)
+        if all(map(self._data.get, path)) and id_target in self._data:
             if isinstance(target, Value):
-                return self._data[target]
-            elif self._data[target]:
+                return self._data[id_target]
+            elif self._data[id_target]:
                 return True
         raise KeyError(key)
 
     def __setitem__(self, key, value):
         if not key:
             raise KeyError(key)
+        _id = self._id
         path = self.root.path_from_name(key)
         target = path[-1]
         for parent, child in zip(path[:-1], path[1:]):
-            self._data[parent] = True
+            self._register(parent)
+            self._data[_id(parent)] = True
             if isinstance(parent, Switch):
-                actives = {n for n in parent.nodes if self._data.get(n)}
+                actives = {n for n in parent.nodes if self._data.get(_id(n))}
                 if actives - {child}:
                     olds = ' and '.join(repr(e.name) for e in actives)
                     self.info(f"{olds} is owerwritten by '{child.name}'")
                     for node in actives:
                         for dct in self._data.maps:
-                            dct.pop(node, None)
-        self._data[target] = target.convert(value)
+                            dct.pop(_id(node), None)
+        self._register(target)
+        self._data[_id(target)] = target.convert(value)
 
     def get(self, key, default=None):
         try:
@@ -90,6 +112,7 @@ class ConfigMapping:
     def __or__(self, other):
         assert self.root == other.root
         res = type(self)()
+        res._node_ids = self._node_ids | other._node_ids
         res._data.maps[0].update(self._data.maps[0])
         res._data.maps[0].update(other._data.maps[0])
         return res
@@ -98,7 +121,14 @@ class ConfigMapping:
 class ConfigExtract(ConfigMapping):
 
     def extract_node(self, node):
-        return type(self)()
+        # TODO: check if node is in self.root
+        root = node.rename(None)
+        self._register(root, self._id(node))
+        res = type(self)()
+        res.root = root
+        res._node_ids = self._node_ids
+        res._data = self._data
+        return res
 
 
 class ConfigCLI(ConfigMapping):
