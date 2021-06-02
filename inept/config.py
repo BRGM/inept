@@ -5,7 +5,7 @@ import click
 from .tree import Node, Group, Switch, Options, Value
 
 
-class ConfigBase:
+class ConfigMapping:
 
     root = Group(None, ())
 
@@ -95,7 +95,13 @@ class ConfigBase:
         return res
 
 
-class ConfigCLI(ConfigBase):
+class ConfigExtract(ConfigMapping):
+
+    def extract_node(self, node):
+        return type(self)()
+
+
+class ConfigCLI(ConfigMapping):
 
     def __init__(self, command_name=None, **kwds):
         super().__init__(**kwds)
@@ -140,7 +146,7 @@ class ConfigCLI(ConfigBase):
         self.update(self.parse_cli(args, **extra))
 
 
-class ConfigSerialize(ConfigBase):
+class ConfigSerialize(ConfigMapping):
 
     def to_dict(self):
         res = {}
@@ -170,7 +176,11 @@ class ConfigSerialize(ConfigBase):
         return res
 
 
-class ConfigSimple(ConfigSerialize, ConfigCLI, ConfigBase):
+class ConfigBase(ConfigSerialize, ConfigCLI, ConfigExtract, ConfigMapping):
+    pass
+
+
+class ConfigSimple(ConfigBase):
 
     def __init__(self, root, **kwds):
         self._root = root
