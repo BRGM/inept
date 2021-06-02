@@ -8,9 +8,9 @@ except (PackageNotFoundError, ModuleNotFoundError):
 
 from .tree import Value, Group, Options, Switch
 from .tree_builder import TreeBuilder
-from .config import ConfigSimple, ConfigSerialize, ConfigCLI, ConfigBase
+from .config import ConfigSimple, ConfigBase
 
 
-class Config(TreeBuilder, ConfigSerialize, ConfigCLI, ConfigBase):
+class Config(TreeBuilder, ConfigBase):
     pass
 

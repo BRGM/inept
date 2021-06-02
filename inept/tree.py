@@ -37,7 +37,7 @@ class Node:
             yield (self, child)
             yield from child.iter_edges()
 
-    def walk(self):
+    def walk(self, filter=True):
         yield (self,)
 
     @staticmethod
@@ -72,13 +72,14 @@ class Group(Node):
         super().__init__(name, default=default, doc=doc, nodes=nodes)
         assert all(isinstance(e, Node) for e in nodes)
 
-    def walk(self):
+    def walk(self, filter=True):
         yield (self,)
         for node in self.nodes:
-            for path in node.walk():
-                head, *tail = path
-                if not tail and not isinstance(head, Value):
-                    continue
+            for path in node.walk(filter):
+                if filter:
+                    head, *tail = path
+                    if not tail and not isinstance(head, Value):
+                        continue
                 yield (self,) + path
 
     def validate(self):
@@ -101,10 +102,10 @@ class Group(Node):
 
 class Options(Group):
 
-    def walk(self):
+    def walk(self, filter=True):
         yield (self,)
         for node in self.nodes:
-            for path in node.walk():
+            for path in node.walk(filter):
                 yield (self,) + path
 
 
