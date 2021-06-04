@@ -16,4 +16,5 @@ setup(
     install_requires=[
         'click',
     ],
+    python_requires='>=3.6',
 )
