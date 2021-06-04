@@ -168,7 +168,8 @@ class ConfigCLI(ConfigMapping):
             opt.name = name
             opt.expose_value = True
             params.append(opt)
-        self._cli = click.Command(command_name, params=params)
+        help = self.root.doc
+        self._cli = click.Command(command_name, params=params, help=help)
 
     @staticmethod
     def get_type(node):
@@ -180,7 +181,6 @@ class ConfigCLI(ConfigMapping):
         if args is None:
             args = sys.argv[1:]
         ctx = self.cli.make_context(self.cli.name, args, **extra)
-        # ctx = self.cli.make_context(None, args, **extra)
         return {k: v for k, v in ctx.params.items() if v is not None}
 
     def load_cli(self, args=None, **extra):
