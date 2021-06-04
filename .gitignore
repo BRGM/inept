@@ -9,5 +9,6 @@ dist/*
 env/
 
 _version.py
+docs/api/
 
 *.swp

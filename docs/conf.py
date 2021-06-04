@@ -4,15 +4,15 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+import sys
+
+import sphinx_rtd_theme
+
+
 # -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +22,10 @@ copyright = '2021, inept development team'
 author = 'inept development team'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+try:
+    from inept import __version__ as release
+except:
+    release = None
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,6 +34,10 @@ release = '0.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -47,9 +54,34 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+html_static_path = []
+
+
+# -- setup() -----------------------------------------------------------------
+
+def run_apidoc(_):
+    from sphinx.ext.apidoc import main
+    import os
+    import shutil
+    cur_dir = os.path.dirname(__file__)
+    module = os.path.join(cur_dir, '../inept')
+    output_path = os.path.join(cur_dir, 'api')
+    shutil.rmtree(output_path, ignore_errors=True)
+    main(['--separate',
+        '--module-first',
+        '--no-toc',
+        '--force',
+        '-o', output_path, module,
+    ])
+
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
+

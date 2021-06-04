@@ -1,20 +1,22 @@
-.. inept documentation master file, created by
-   sphinx-quickstart on Fri Jun  4 11:58:26 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to inept's documentation!
 =================================
 
+An "**in**\ teractive **e**\ ditable o\ **pt**\ ions" library for handling complex option hierarchies
+from multiple sources (script, CLI, config files, ...).
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Guide
+
+   userguide/install
+   tutorials/index
 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference API
 
-Indices and tables
-==================
+   api/inept
+
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
