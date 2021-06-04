@@ -1,7 +1,7 @@
 Installing inept
 ================
 
-The stable version can be installde with:
+The last stable version can be installed with:
 
 .. code-block:: bash
 

@@ -11,6 +11,12 @@ from multiple sources (script, CLI, config files, ...).
    userguide/install
    tutorials/index
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer Guide
+
+   devguide/contributing
+   devguide/roadmap
 
 .. toctree::
    :maxdepth: 1
