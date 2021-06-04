@@ -128,7 +128,7 @@ class ConfigExtract(ConfigMapping):
         for *base, leaf in self.root.walk(filter=False):
             if leaf == node:
                 return tuple(base)
-        raise ValueError("node {node} is not in self.root")
+        raise ValueError(f"node {node} is not in self.root")
 
     def extract_node(self, node):
         base_path = self._get_base_path(node)
