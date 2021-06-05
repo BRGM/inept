@@ -9,6 +9,7 @@ from multiple sources (script, CLI, config files, ...).
    :caption: User Guide
 
    install
+   quick-start
    tutorials/index
 
 .. toctree::

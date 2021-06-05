@@ -5,6 +5,7 @@
 dist/*
 .eggs/*
 *.egg-info
+.ipynb_checkpoints/
 
 env/
 

@@ -57,12 +57,18 @@ The documentation sources are in the :code:`docs/` directory:
 
   $ cd docs/
 
-Install the sphinx dependencies with:
+Install the sphinx and its dependencies with:
 
 .. code-block:: bash
 
   $ cd docs/
   $ pip install -r requirements
+
+and the nbsphinx `dependencies <https://nbsphinx.readthedocs.io/en/latest/installation.html#pandoc>`_ with:
+
+.. code-block:: bash
+
+  $ conda install -c conda-forge pandoc
 
 Build the documentation with:
 
