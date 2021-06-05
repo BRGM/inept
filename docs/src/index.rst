@@ -8,15 +8,15 @@ from multiple sources (script, CLI, config files, ...).
    :maxdepth: 2
    :caption: User Guide
 
-   userguide/install
+   install
    tutorials/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer Guide
 
-   devguide/contributing
-   devguide/roadmap
+   contributing
+   roadmap
 
 .. toctree::
    :maxdepth: 1
