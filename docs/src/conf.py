@@ -6,13 +6,15 @@
 
 import os
 import sys
+import subprocess
 
 import sphinx_rtd_theme
 
 
 # -- Path setup --------------------------------------------------------------
 
-sys.path.insert(0, os.path.abspath('../'))
+ROOT = '../../'
+sys.path.insert(0, os.path.abspath(ROOT))
 
 
 # -- Project information -----------------------------------------------------
@@ -23,6 +25,7 @@ author = 'inept development team'
 
 # The full version, including alpha/beta/rc tags
 try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", ROOT])
     from inept import __version__ as release
 except:
     release = None
