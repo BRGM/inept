@@ -27,7 +27,7 @@ The github repository is a mirror of the main branch.
 Preparing the environment
 -------------------------
 
-You can prepare a (conda) virtual environment with:
+You can prepare a (`conda <https://docs.conda.io>`_) virtual environment with:
 
 .. code-block:: bash
 
@@ -41,7 +41,7 @@ Install the development dependencies with:
 
   $ pip install -r requirements.txt
 
-Run the tests with:
+Run the tests (`pytest <https://docs.pytest.org>`_) with:
 
 .. code-block:: bash
 
@@ -57,14 +57,14 @@ The documentation sources are in the :code:`docs/` directory:
 
   $ cd docs/
 
-Install the sphinx and its dependencies with:
+Install `sphinx <https://www.sphinx-doc.org/>`_ and its dependencies with:
 
 .. code-block:: bash
 
   $ cd docs/
   $ pip install -r requirements
 
-and the nbsphinx `dependencies <https://nbsphinx.readthedocs.io/en/latest/installation.html#pandoc>`_ with:
+and the `nbsphinx <https://nbsphinx.readthedocs.io>`_ `dependencies <https://nbsphinx.readthedocs.io/en/latest/installation.html#pandoc>`_ with:
 
 .. code-block:: bash
 
