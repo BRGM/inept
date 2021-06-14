@@ -17,7 +17,6 @@ def test_default_under_flag_group():
     conf['a'] = True
 
     assert conf.to_dict() == {
-        'a': True,
         'a.x': 42,
         'a.y': False,
     }
@@ -36,7 +35,6 @@ def test_default_under_flag_group():
     conf['a.x'] = 2
 
     assert conf.to_dict() == {
-        'a': True,
         'a.x': 2,
         'a.y': False,
     }

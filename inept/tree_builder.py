@@ -170,7 +170,7 @@ class TreeBuilderMeta(type):
         if root is not None:
             root.validate()
         namespace = dict(namespace)
-        namespace['root'] = root
+        namespace['__root__'] = root
         return type.__new__(mcls, name, bases, namespace)
 
 

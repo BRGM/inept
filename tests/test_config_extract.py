@@ -18,22 +18,22 @@ def test_simple_options():
     conf = Config()
     subc = conf.extract_node(node_a)
 
-    assert list(conf) == ['a', 'a.x', 'a.y', 'b', 'b.x', 'b.y']
-    assert list(subc) == ['x', 'y']
+    assert conf.all_keys() == ['a', 'a.x', 'a.y', 'b', 'b.x', 'b.y']
+    assert subc.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert subc.to_dict() == {}
 
     conf['a.x'] = 42
-    assert conf.to_dict() == {'a': True, 'a.x': 42}
+    assert conf.to_dict() == {'a.x': 42}
     assert subc.to_dict() == {'x': 42}
 
     subc['y'] = 6
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 6}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 6}
     assert subc.to_dict() == {'x': 42, 'y': 6}
 
     conf['b.y'] = 12
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 6, 'b':True, 'b.y': 12}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 6, 'b.y': 12}
     assert subc.to_dict() == {'x': 42, 'y': 6}
 
 
@@ -54,8 +54,8 @@ def test_simple_group():
     conf = Config()
     subc = conf.extract_node(node_a)
 
-    assert list(conf) == ['a.x', 'a.y', 'b.x', 'b.y']
-    assert list(subc) == ['x', 'y']
+    assert conf.all_keys() == ['a', 'a.x', 'a.y', 'b', 'b.x', 'b.y']
+    assert subc.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert subc.to_dict() == {}
@@ -90,26 +90,26 @@ def test_simple_switch():
     conf = Config()
     subc = conf.extract_node(node_a)
 
-    assert list(conf) == ['a', 'a.x', 'a.y', 'b', 'b.x', 'b.y']
-    assert list(subc) == ['x', 'y']
+    assert conf.all_keys() == ['a', 'a.x', 'a.y', 'b', 'b.x', 'b.y']
+    assert subc.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert subc.to_dict() == {}
 
     conf['a.x'] = 42
-    assert conf.to_dict() == {'a': True, 'a.x': 42}
+    assert conf.to_dict() == {'a.x': 42}
     assert subc.to_dict() == {'x': 42}
 
     subc['y'] = 6
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 6}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 6}
     assert subc.to_dict() == {'x': 42, 'y': 6}
 
     conf['b.y'] = 12
-    assert conf.to_dict() == {'b':True, 'b.y': 12}
+    assert conf.to_dict() == {'b.y': 12}
     assert subc.to_dict() == {}
 
     subc['x'] = 5
-    assert conf.to_dict() == {'a': True, 'a.x': 5, 'a.y': 6}
+    assert conf.to_dict() == {'a.x': 5, 'a.y': 6}
     assert subc.to_dict() == {'x': 5, 'y': 6}
 
 
@@ -138,44 +138,47 @@ def test_deep_options():
 
     conf = Config()
     c_a = conf.extract_node(node_a)
-    c_ap = conf.extract_node(node_ap)
+    # c_ap = conf.extract_node(node_ap)
+    c_ap = conf['a.ap']
 
-    assert list(conf) == [
+    assert conf.all_keys() == [
+        'a',
         'a.ap', 'a.ap.x', 'a.ap.y',
         'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
         'b.bp', 'b.bp.x', 'b.bp.y',
         'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
+    assert c_a.all_keys() == [
         'ap', 'ap.x', 'ap.y',
         'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
     assert c_ap.to_dict() == {}
 
     conf['a.ap.x'] = 42
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 42}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 42}
+    assert conf.to_dict() == {'a.ap.x': 42}
+    assert c_a.to_dict() == {'ap.x': 42}
     assert c_ap.to_dict() == {'x': 42}
 
     c_a['ap.x'] = 21
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21}
+    assert conf.to_dict() == {'a.ap.x': 21}
+    assert c_a.to_dict() == {'ap.x': 21}
     assert c_ap.to_dict() == {'x': 21}
 
     c_ap['y'] = 6
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert conf.to_dict() == {'a.ap.x': 21, 'a.ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     conf['b.bq.y'] = 12
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 21, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
 
@@ -206,17 +209,19 @@ def test_deep_group():
     c_a = conf.extract_node(node_a)
     c_ap = conf.extract_node(node_ap)
 
-    assert list(conf) == [
-        'a.ap.x', 'a.ap.y',
-        'a.aq.x', 'a.aq.y',
-        'b.bp.x', 'b.bp.y',
-        'b.bq.x', 'b.bq.y',
+    assert conf.all_keys() == [
+        'a',
+        'a.ap', 'a.ap.x', 'a.ap.y',
+        'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
+        'b.bp', 'b.bp.x', 'b.bp.y',
+        'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
-        'ap.x', 'ap.y',
-        'aq.x', 'aq.y',
+    assert c_a.all_keys() == [
+        'ap', 'ap.x', 'ap.y',
+        'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
@@ -272,56 +277,58 @@ def test_deep_switch():
     c_a = conf.extract_node(node_a)
     c_ap = conf.extract_node(node_ap)
 
-    assert list(conf) == [
+    assert conf.all_keys() == [
+        'a',
         'a.ap', 'a.ap.x', 'a.ap.y',
         'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
         'b.bp', 'b.bp.x', 'b.bp.y',
         'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
+    assert c_a.all_keys() == [
         'ap', 'ap.x', 'ap.y',
         'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
     assert c_ap.to_dict() == {}
 
     conf['a.ap.x'] = 42
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 42}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 42}
+    assert conf.to_dict() == {'a.ap.x': 42}
+    assert c_a.to_dict() == {'ap.x': 42}
     assert c_ap.to_dict() == {'x': 42}
 
     c_a['ap.x'] = 21
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21}
+    assert conf.to_dict() == {'a.ap.x': 21}
+    assert c_a.to_dict() == {'ap.x': 21}
     assert c_ap.to_dict() == {'x': 21}
 
     c_ap['y'] = 6
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert conf.to_dict() == {'a.ap.x': 21, 'a.ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     conf['b.bq.y'] = 12
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 21, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     c_a['aq.y'] = 7
     assert conf.to_dict() == {
-        'a.aq': True, 'a.aq.y': 7, 'b.bq': True, 'b.bq.y': 12,
+        'a.aq.y': 7, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'aq': True, 'aq.y': 7}
+    assert c_a.to_dict() == {'aq.y': 7}
     assert c_ap.to_dict() == {}
 
     c_ap['x'] = 5
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 5, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 5, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 5, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 5, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 5, 'y': 6}
 
 
@@ -352,42 +359,44 @@ def test_deep_from_sub_options():
     c_a = conf.extract_node(node_a)
     c_ap = c_a.extract_node(node_ap)
 
-    assert list(conf) == [
+    assert conf.all_keys() == [
+        'a',
         'a.ap', 'a.ap.x', 'a.ap.y',
         'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
         'b.bp', 'b.bp.x', 'b.bp.y',
         'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
+    assert c_a.all_keys() == [
         'ap', 'ap.x', 'ap.y',
         'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
     assert c_ap.to_dict() == {}
 
     conf['a.ap.x'] = 42
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 42}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 42}
+    assert conf.to_dict() == {'a.ap.x': 42}
+    assert c_a.to_dict() == {'ap.x': 42}
     assert c_ap.to_dict() == {'x': 42}
 
     c_a['ap.x'] = 21
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21}
+    assert conf.to_dict() == {'a.ap.x': 21}
+    assert c_a.to_dict() == {'ap.x': 21}
     assert c_ap.to_dict() == {'x': 21}
 
     c_ap['y'] = 6
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert conf.to_dict() == {'a.ap.x': 21, 'a.ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     conf['b.bq.y'] = 12
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 21, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
 
@@ -418,17 +427,19 @@ def test_deep_from_sub_group():
     c_a = conf.extract_node(node_a)
     c_ap = c_a.extract_node(node_ap)
 
-    assert list(conf) == [
-        'a.ap.x', 'a.ap.y',
-        'a.aq.x', 'a.aq.y',
-        'b.bp.x', 'b.bp.y',
-        'b.bq.x', 'b.bq.y',
+    assert conf.all_keys() == [
+        'a',
+        'a.ap', 'a.ap.x', 'a.ap.y',
+        'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
+        'b.bp', 'b.bp.x', 'b.bp.y',
+        'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
-        'ap.x', 'ap.y',
-        'aq.x', 'aq.y',
+    assert c_a.all_keys() == [
+        'ap', 'ap.x', 'ap.y',
+        'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
@@ -484,54 +495,56 @@ def test_deep_from_sub_switch():
     c_a = conf.extract_node(node_a)
     c_ap = c_a.extract_node(node_ap)
 
-    assert list(conf) == [
+    assert conf.all_keys() == [
+        'a',
         'a.ap', 'a.ap.x', 'a.ap.y',
         'a.aq', 'a.aq.x', 'a.aq.y',
+        'b',
         'b.bp', 'b.bp.x', 'b.bp.y',
         'b.bq', 'b.bq.x', 'b.bq.y',
     ]
-    assert list(c_a) == [
+    assert c_a.all_keys() == [
         'ap', 'ap.x', 'ap.y',
         'aq', 'aq.x', 'aq.y',
     ]
-    assert list(c_ap) == ['x', 'y']
+    assert c_ap.all_keys() == ['x', 'y']
 
     assert conf.to_dict() == {}
     assert c_a.to_dict() == {}
     assert c_ap.to_dict() == {}
 
     conf['a.ap.x'] = 42
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 42}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 42}
+    assert conf.to_dict() == {'a.ap.x': 42}
+    assert c_a.to_dict() == {'ap.x': 42}
     assert c_ap.to_dict() == {'x': 42}
 
     c_a['ap.x'] = 21
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21}
+    assert conf.to_dict() == {'a.ap.x': 21}
+    assert c_a.to_dict() == {'ap.x': 21}
     assert c_ap.to_dict() == {'x': 21}
 
     c_ap['y'] = 6
-    assert conf.to_dict() == {'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6}
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert conf.to_dict() == {'a.ap.x': 21, 'a.ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     conf['b.bq.y'] = 12
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 21, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 21, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 21, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 21, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 21, 'y': 6}
 
     c_a['aq.y'] = 7
     assert conf.to_dict() == {
-        'a.aq': True, 'a.aq.y': 7, 'b.bq': True, 'b.bq.y': 12,
+        'a.aq.y': 7, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'aq': True, 'aq.y': 7}
+    assert c_a.to_dict() == {'aq.y': 7}
     assert c_ap.to_dict() == {}
 
     c_ap['x'] = 5
     assert conf.to_dict() == {
-        'a.ap': True, 'a.ap.x': 5, 'a.ap.y': 6, 'b.bq': True, 'b.bq.y': 12,
+        'a.ap.x': 5, 'a.ap.y': 6, 'b.bq.y': 12,
     }
-    assert c_a.to_dict() == {'ap': True, 'ap.x': 5, 'ap.y': 6}
+    assert c_a.to_dict() == {'ap.x': 5, 'ap.y': 6}
     assert c_ap.to_dict() == {'x': 5, 'y': 6}
