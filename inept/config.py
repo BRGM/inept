@@ -1,17 +1,36 @@
 import sys
+import copy
 import collections
+
 import click
 
 from .tree import Node, Group, Switch, Options, Value
 
 
-class ConfigMapping:
+class ValuePathError(Exception):
+    pass
 
-    root = Group(None, ())
+
+class RootDescriptor:
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return owner.__root__
+        return instance.__root__
+
+    def __set__(self, instance, value):
+        raise AttributeError("can't set attribute")
+
+
+class ConfigTree:
+
+    __root__ = Group(None, ())
+
+    root = RootDescriptor()
 
     def __init__(self):
         self.validate_root(self.root)
-        self._base_path = ()
+        self.__base_path__ = ()
         self._node_ids = {}
         # _data is (local) + (intial default)
         self._data = collections.ChainMap({}, self._init_default())
@@ -56,33 +75,75 @@ class ConfigMapping:
         assert isinstance(root, Node)
         root.validate()
 
-    def update(self, data):
-        for key, value in dict(data).items():
-            self[key] = value
+    def all_keys(self):
+        names = (Node.name_from_path(p) for p in self.root.walk(filter=False))
+        names = (n for n in names if n)
+        seen = set()
+        seen_add = seen.add
+        return [x for x in names if not (x in seen or seen_add(x))]
 
-    def __iter__(self):
-        names = (Node.name_from_path(p) for p in self.root.walk())
-        return (n for n in names if n)
+    def _get_base_path(self, node):
+        for *base, leaf in self.root.walk(filter=False):
+            if leaf == node:
+                return tuple(base)
+        raise ValueError(f"node {node} is not in self.root")
+
+    def extract_node(self, node):
+        base_path = self._get_base_path(node)
+        root = node.rename(None)
+        self._register(root, self._id(node))
+        res = copy.copy(self)
+        res.__root__ = root
+        res.__base_path__ = base_path
+        return res
+
+    def iter_values(self):
+        for path in self.root.walk():
+            path = self.__base_path__ + path
+            target = path[-1]
+            try:
+                yield path, self.get_value(path)
+            except ValuePathError:
+                pass
+
+    def get_value(self, path):
+        *path, target = path
+        if not isinstance(target, Value):
+            raise ValuePathError("not a Value")
+        id_path = map(self._id, path)
+        id_target = self._id(target)
+        if all(map(self._data.get, id_path)) and id_target in self._data:
+            return self._data[id_target]
+        raise ValuePathError("inactive path")
+
+    def __bool__(self):
+        return any(True for _ in self.iter_values())
+
+
+class ConfigMapping(ConfigTree):
+
+    # TODO: complete the mapping API
 
     def info(self, msg):
         # FIXME On fait quoi pour les messages ? du logging ?
+        # FIXME On garde vraiment ?
         print("INFO:", msg)
 
     def _get_path(self, key):
-        return self._base_path + self.root.path_from_name(key)
+        return self.__base_path__ + self.root.path_from_name(key)
 
     def __getitem__(self, key):
         if not key:
             raise KeyError(key)
-        *path, target = self._get_path(key)
-        path = map(self._id, path)
-        id_target = self._id(target)
-        if all(map(self._data.get, path)) and id_target in self._data:
-            if isinstance(target, Value):
-                return self._data[id_target]
-            elif self._data[id_target]:
-                return True
-        raise KeyError(key)
+        path = self._get_path(key)
+        target = path[-1]
+        if isinstance(target, Value):
+            try:
+                return self.get_value(path)
+            except ValuePathError:
+                raise KeyError(key)
+        else:
+            return self.extract_node(target)
 
     def __setitem__(self, key, value):
         if not key:
@@ -104,12 +165,6 @@ class ConfigMapping:
         self._register(target)
         self._data[_id(target)] = target.convert(value)
 
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
     def __delitem__(self, key):
         raise NotImplementedError("TODO")
 
@@ -121,25 +176,15 @@ class ConfigMapping:
         res._data.maps[0].update(other._data.maps[0])
         return res
 
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
-class ConfigExtract(ConfigMapping):
-
-    def _get_base_path(self, node):
-        for *base, leaf in self.root.walk(filter=False):
-            if leaf == node:
-                return tuple(base)
-        raise ValueError(f"node {node} is not in self.root")
-
-    def extract_node(self, node):
-        base_path = self._get_base_path(node)
-        root = node.rename(None)
-        self._register(root, self._id(node))
-        res = type(self)()
-        res.root = root
-        res._base_path = base_path
-        res._node_ids = self._node_ids
-        res._data = self._data
-        return res
+    def update(self, data):
+        for key, value in dict(data).items():
+            self[key] = value
 
 
 class ConfigCLI(ConfigMapping):
@@ -190,47 +235,40 @@ class ConfigCLI(ConfigMapping):
             sys.exit(err.exit_code)
 
 
-class ConfigSerialize(ConfigMapping):
+class ConfigSerialize(ConfigTree):
 
     def to_dict(self):
         res = {}
-        for path in self.root.walk():
-            key = Node.name_from_path(path)
-            try:
-                value = self[key]
-            except KeyError:
-                continue
+        base_path = self.__base_path__
+        n = len(base_path)
+        for path, value in self.iter_values():
+            assert path[:n] == base_path
+            key = Node.name_from_path(path[n:])
             res[key] = value
         return res
 
     def to_nested_dict(self):
         res = {}
-        for path in self.root.walk():
-            key = Node.name_from_path(path)
-            try:
-                value = self[key]
-            except KeyError:
-                continue
+        base_path = list(self.__base_path__)
+        n = len(base_path)
+        for (*path, target), value in self.iter_values():
+            assert path[:n] == base_path
             data = res
-            for node in path[:-1]:
+            for node in path[n:]:
                 if node.name:
                     data = data.setdefault(node.name, {})
-            if isinstance(path[-1], Value):
-                data[path[-1].name] = value
+            if isinstance(target, Value):
+                data[target.name] = value
         return res
 
 
-class ConfigBase(ConfigSerialize, ConfigCLI, ConfigExtract, ConfigMapping):
+class ConfigBase(ConfigSerialize, ConfigCLI, ConfigMapping):
     pass
 
 
 class ConfigSimple(ConfigBase):
 
     def __init__(self, root, **kwds):
-        self._root = root
+        self.__root__ = root
         super().__init__(**kwds)
-
-    @property
-    def root(self):
-        return self._root
 

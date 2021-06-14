@@ -28,7 +28,7 @@ def test_simple():
         ])
     ])
     order = ConfigSimple(carte_tree)
-    assert list(order) == [
+    assert order.all_keys() == [
         'cafe',
         'boisson',
         'menu_base',
@@ -53,7 +53,7 @@ def test_tree_builder():
                 menu_complet = MenuComplet.root
 
     order = Carte()
-    assert list(order) == [
+    assert order.all_keys() == [
         'cafe',
         'boisson',
         'menu_base',

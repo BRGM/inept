@@ -27,9 +27,9 @@ def test_conf_script():
     conf['a2e.b2gf.d3gf.e1oi'] = 10
     conf['a2e.b2gf.d3gf'] = True
 
-    assert conf['a1ob'] == True
+    assert conf['a1ob']
     assert conf['a2e.b2gf.d3gf.e1oi'] == 10
-    assert conf['a2e.b2gf.d3gf'] == True
+    assert conf['a2e.b2gf.d3gf']
     assert conf['a2e.b2gf.c5oi'] == 100
     assert conf['a3g.b3oi'] == 30
 
@@ -50,7 +50,7 @@ def test_default_under_exclusif():
 
     conf['y'] = True
 
-    assert conf['y'] == True
+    assert conf['y']
     with pytest.raises(KeyError):
         conf['x']
 
@@ -79,23 +79,39 @@ def test_default_group_under_exclusif():
 
     conf = ConfigSimple(root)
 
-    assert conf['a'] == True
+    assert conf['a']
     assert conf['a.x'] == 42
-    assert conf['a.y'] == True
+    assert conf['a.y']
+    assert not conf['b']
     with pytest.raises(KeyError):
-        conf['b']
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': True}
+        conf['b.x']
+    with pytest.raises(KeyError):
+        conf['b.y']
+    assert conf.to_dict() == {'a.x': 42, 'a.y': True}
 
     conf['b'] = True
 
-    assert conf['b'] == True
+    assert conf['b']
     assert conf['b.x'] == 42
-    assert conf['b.y'] == True
+    assert conf['b.y']
+    assert not conf['a']
     with pytest.raises(KeyError):
-        conf['a']
-    assert conf.to_dict() == {'b': True, 'b.x': 42, 'b.y': True}
+        conf['a.x']
+    with pytest.raises(KeyError):
+        conf['a.y']
+    assert conf.to_dict() == {'b.x': 42, 'b.y': True}
 
     conf['b'] = False
+    assert not conf['a']
+    with pytest.raises(KeyError):
+        conf['a.x']
+    with pytest.raises(KeyError):
+        conf['a.y']
+    assert not conf['b']
+    with pytest.raises(KeyError):
+        conf['b.x']
+    with pytest.raises(KeyError):
+        conf['b.y']
     assert conf.to_dict() == {}
 
 
@@ -109,8 +125,7 @@ def test_one_option():
 
     conf = ConfigSimple(root)
 
-    with pytest.raises(KeyError):
-        conf['a']
+    assert not conf['a']
     with pytest.raises(KeyError):
         conf['a.x']
     with pytest.raises(KeyError):
@@ -119,20 +134,26 @@ def test_one_option():
 
     conf['a'] = True
 
-    assert conf['a'] == True
+    assert conf['a']
     assert conf['a.x'] == 42
     assert conf['a.y'] == False
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': False}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': False}
 
     conf['a'] = False
 
-    with pytest.raises(KeyError):
-        conf['a']
+    assert not conf['a']
     with pytest.raises(KeyError):
         conf['a.x']
     with pytest.raises(KeyError):
         conf['a.y']
     assert conf.to_dict() == {}
+
+    conf['a.x'] = 15
+
+    assert conf['a']
+    assert conf['a.x'] == 15
+    assert conf['a.y'] == False
+    assert conf.to_dict() == {'a.x': 15, 'a.y': False}
 
 
 def test_options():
@@ -151,16 +172,16 @@ def test_options():
     assert conf.to_dict() == {}
 
     conf['a'] = True
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 'hello'}
 
     conf['a'] = False
     assert conf.to_dict() == {}
 
     conf['b.x'] = 12
-    assert conf.to_dict() == {'b': True, 'b.x': 12, 'b.y': 'bye'}
+    assert conf.to_dict() == {'b.x': 12, 'b.y': 'bye'}
 
     conf['a'] = True
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello', 'b': True, 'b.x': 12, 'b.y': 'bye'}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 'hello', 'b.x': 12, 'b.y': 'bye'}
 
 
 def test_options_with_default():
@@ -176,45 +197,19 @@ def test_options_with_default():
     ])
 
     conf = ConfigSimple(root)
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 'hello'}
 
     conf['a'] = True
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello'}
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 'hello'}
 
     conf['a'] = False
     assert conf.to_dict() == {}
 
     conf['b.x'] = 12
-    assert conf.to_dict() == {'b': True, 'b.x': 12, 'b.y': 'bye'}
+    assert conf.to_dict() == {'b.x': 12, 'b.y': 'bye'}
 
     conf['a'] = True
-    assert conf.to_dict() == {'a': True, 'a.x': 42, 'a.y': 'hello', 'b': True, 'b.x': 12, 'b.y': 'bye'}
-
-
-# def test_not_all_flag_under_exclusive_exclusive():
-#     root = Switch(None, [
-#         Group('a', nodes=[
-#             Value('x', int, 42),
-#         ]),
-#         Group('b', nodes=[
-#             Value('x', int, 12),
-#         ]),
-#     ])
-#     with pytest.raises(ValueError):
-#         ConfigSimple(root)
-
-
-# def test_not_any_flag_under_exclusive_exclusive():
-#     root = Switch(None, [
-#         Group('a', nodes=[
-#             Value('x', int, 42),
-#         ]),
-#         Group('b', nodes=[
-#             Value('x', int, 12),
-#         ]),
-#     ])
-#     with pytest.raises(ValueError):
-#         ConfigSimple(root)
+    assert conf.to_dict() == {'a.x': 42, 'a.y': 'hello', 'b.x': 12, 'b.y': 'bye'}
 
 
 def test_empty_conf_exclusive():
@@ -242,5 +237,5 @@ def test_empty_conf_default_under_exclusive():
             ]),
         ])
     )
-    assert conf.to_dict() == {'a': True, 'a.x': 42}
+    assert conf.to_dict() == {'a.x': 42}
 

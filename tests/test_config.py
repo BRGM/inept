@@ -43,7 +43,7 @@ def test_carte():
 
     c = Carte()
 
-    assert list(c) == [
+    assert c.all_keys() == [
         'cafe',
         'boisson',
         'menu_base',
@@ -65,7 +65,6 @@ def test_carte():
     assert c.to_dict() == {
         'cafe': False,
         'boisson': 'limonade',
-        'menu_base': True,
         'menu_base.plat': 'steak frite',
         'menu_base.dessert': 'tarte',
     }
@@ -74,7 +73,6 @@ def test_carte():
     assert c.to_dict() == {
         'cafe': False,
         'boisson': 'limonade',
-        'menu_base': True,
         'menu_base.plat': 'steak frite',
         'menu_base.dessert': 'mousse au chocolat',
     }
@@ -83,7 +81,6 @@ def test_carte():
     assert c.to_dict() == {
         'cafe': False,
         'boisson': 'limonade',
-        'menu_base': True,
         'menu_base.plat': 'steak frite',
         'menu_base.entree': 'soupe',
     }
@@ -92,7 +89,6 @@ def test_carte():
     assert c.to_dict() == {
         'cafe': False,
         'boisson': 'limonade',
-        'menu_complet': True,
         'menu_complet.entree': 'salade',
         'menu_complet.plat': 'lasagnes',
         'menu_complet.dessert': 'compote',
@@ -108,7 +104,6 @@ def test_carte():
     assert c.to_dict() == {
         'cafe': False,
         'boisson': 'limonade',
-        'menu_base': True,
         'menu_base.plat': 'steak frite',
         'menu_base.entree': 'soupe',
     }

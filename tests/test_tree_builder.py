@@ -32,7 +32,7 @@ def test_build():
                 b3oi: int = 30
                 b4od: float = 1e-6
 
-    assert {Node.name_from_path(p) for p in MyConfig.root.walk()} == {
+    assert {Node.name_from_path(p) for p in MyConfig.__root__.walk()} == {
         '',
         'a1ob',
         'a2e.b1ef',
