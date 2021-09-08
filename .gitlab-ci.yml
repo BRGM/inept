@@ -32,14 +32,15 @@ wheels:
 pytest:
   stage: test
   tags:
-    - test
+    - build
   script:
+    - pip install .
     - pytest
 
 publish-release:
   stage: publish
   tags:
-    - release
+    - build
   script:
     - pip install --upgrade twine
     - twine upload -u __token__ -p $PYPI_TOKEN dist/*
@@ -49,7 +50,7 @@ publish-release:
 publish-dev:
   stage: publish
   tags:
-    - release
+    - build
   script:
     - pip install --upgrade twine
     - twine upload --repository-url https://gitlab.inria.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi -u gitlab-ci-token -p $CI_JOB_TOKEN dist/*
