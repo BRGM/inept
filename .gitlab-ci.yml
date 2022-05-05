@@ -24,7 +24,7 @@ wheels:
   stage: build
   tags:
     - build
-  script: python setup.py bdist_wheel
+  script: python setup.py bdist_wheel sdist
   artifacts:
     paths:
     - dist/
