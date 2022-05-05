@@ -108,3 +108,63 @@ def test_carte():
         'menu_base.entree': 'soupe',
     }
 
+
+def test_carte_swith_to_False():
+    """
+    putting an inactive switched group to False should not change config
+    see issue #37
+    """
+
+    class Carte(Config):
+        with _.options:
+            cafe: bool = False
+            boisson: str
+            with _.switch:
+                with _.group as menu_base:
+                    plat: str = "steak frite"
+                    with _.switch:
+                        entree: str
+                        dessert: str = "tarte"
+                with _.group as menu_complet:
+                    plat: str = "lasagnes"
+                    entree: str = "salade"
+                    dessert: str = "compote"
+
+    c = Carte()
+
+    c['menu_base'] = True
+    assert c.to_dict() == {
+        'cafe': False,
+        'menu_base.plat': 'steak frite',
+        'menu_base.dessert': 'tarte'
+    }
+
+    c['menu_complet'] = False
+    assert c.to_dict() == {
+        'cafe': False,
+        'menu_base.plat': 'steak frite',
+        'menu_base.dessert': 'tarte'
+    }
+
+
+def test_switch_in_switch_set_False():
+
+    class Conf(Config):
+        with _.switch:
+            with _.switch as a:
+                u: str
+                v: str
+            with _.switch as b:
+                x: str
+                y: str
+
+    c = Conf()
+
+    assert c.to_dict() == {}
+
+    c['a.u'] = 1
+    assert c.to_dict() == {'a.u': '1'}
+
+    c['b.x'] = 2
+    assert c.to_dict() == {'b.x': '2'}
+
